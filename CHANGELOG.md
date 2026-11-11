@@ -6,6 +6,8 @@ the date.
 
 ## Unreleased
 
+## 0.1.0 - 2026-11-11
+
 - First version. `cds-guard check` fails a pipeline when a protected CDS entity, element or
   annotation, a code block between `@protected-begin` and `@protected-end`, a file or a value in a
   JSON file changes without its lock file being updated.
@@ -16,3 +18,4 @@ the date.
 - `cds-guard init` creates `.guard/protected.yml`, and `cds-guard list` shows every protected item.
 - `check --format json` and `--format junit` for pipelines that show test results.
 - Ready-made CI steps for GitHub Actions, Azure Pipelines, Bitbucket Pipelines and GitLab CI.
+- Works the same on Windows, macOS and Linux: messages show paths with `/`, and line endings do not change hashes.

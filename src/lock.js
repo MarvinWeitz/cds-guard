@@ -4,9 +4,11 @@ const path = require('node:path')
 const { GUARD_DIR } = require('./config')
 const { collectRule, ruleScopeHash, newRun } = require('./collect')
 const { loadModel } = require('./cds')
+const { toPosix } = require('./files')
 const TOOL_VERSION = require('../package.json').version
 
-const LOCK_DIR = path.join(GUARD_DIR, 'locks')
+// Always with "/": it appears in messages and CODEOWNERS; path.join accepts it on Windows too.
+const LOCK_DIR = `${GUARD_DIR}/locks`
 function lockPath (root, id) { return path.join(root, LOCK_DIR, `${id}.lock`) }
 
 function readLock (root, id) {
@@ -48,7 +50,7 @@ async function lock (root, config, { rules: only = [] } = {}) {
     const file = lockPath(root, rule.id)
     fs.mkdirSync(path.dirname(file), { recursive: true })
     fs.writeFileSync(file, JSON.stringify(data, null, 2) + '\n')
-    written.push({ rule: rule.id, file: path.relative(root, file), items: Object.keys(items).length })
+    written.push({ rule: rule.id, file: toPosix(path.relative(root, file)), items: Object.keys(items).length })
   }
   return { written, problems }
 }

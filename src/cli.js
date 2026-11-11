@@ -7,6 +7,7 @@ const { check, formatText, formatJunit } = require('./check')
 const codeowners = require('./codeowners')
 const { init } = require('./init')
 const { collectRule, newRun } = require('./collect')
+const { toPosix } = require('./files')
 
 const HELP = `cds-guard ${TOOL_VERSION}
 Stops accidental changes to protected CDS entities, annotations, code blocks and files.
@@ -65,8 +66,8 @@ async function main (argv, io = { out: s => process.stdout.write(s + '\n'), err:
       case 'init': {
         const r = init(root, { force: opts.force })
         io.out(r.created
-          ? `Created ${path.relative(root, r.file)}. Add rules, then run "cds-guard lock" and "cds-guard codeowners --write".`
-          : `${path.relative(root, r.file)} already exists (use --force to overwrite).`)
+          ? `Created ${toPosix(path.relative(root, r.file))}. Add rules, then run "cds-guard lock" and "cds-guard codeowners --write".`
+          : `${toPosix(path.relative(root, r.file))} already exists (use --force to overwrite).`)
         return 0
       }
       case 'lock': {
@@ -104,7 +105,7 @@ async function main (argv, io = { out: s => process.stdout.write(s + '\n'), err:
             const file = path.resolve(root, opts.write === true ? '.guard/azure-policies.sh' : opts.write)
             fs.mkdirSync(path.dirname(file), { recursive: true })
             fs.writeFileSync(file, script, { mode: 0o755 })
-            io.out(`wrote ${path.relative(root, file)}`)
+            io.out(`wrote ${toPosix(path.relative(root, file))}`)
           } else io.out(script.trimEnd())
           return 0
         }
@@ -112,7 +113,7 @@ async function main (argv, io = { out: s => process.stdout.write(s + '\n'), err:
         if (opts.write) {
           const file = path.resolve(root, opts.write === true ? codeowners.DEFAULT_FILE[platform] : opts.write)
           codeowners.writeBlock(file, content)
-          io.out(`updated ${path.relative(root, file)}`)
+          io.out(`updated ${toPosix(path.relative(root, file))}`)
         } else io.out(content.trimEnd())
         return 0
       }
