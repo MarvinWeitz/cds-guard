@@ -1,6 +1,6 @@
 {
   "name": "@cbs-consulting/cds-guard",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Stops accidental changes to protected CDS entities, annotations, code blocks and files in CAP and UI5 projects, on any Git platform.",
   "keywords": ["sap", "cap", "cds", "ui5", "fiori", "codeowners", "ci", "guard", "lock"],
   "homepage": "https://github.com/cbs-consulting/cds-guard#readme",

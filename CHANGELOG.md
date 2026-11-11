@@ -6,6 +6,11 @@ the date.
 
 ## Unreleased
 
+## 0.1.1 - 2026-11-11
+
+- The package is now published from the release workflow, with npm provenance that links each
+  version to the commit and workflow run that built it.
+
 ## 0.1.0 - 2026-11-11
 
 - Published on npm as `@cbs-consulting/cds-guard`; the command stays `cds-guard`.
