@@ -1,0 +1,1 @@
+{ "sap.app": { "id": "my.app.orders", "title": "Orders" }, "sap.ui5": { "routing": { "routes": [] } } }

@@ -1,0 +1,23 @@
+# cds-guard for GitLab CI. Include it from your .gitlab-ci.yml:
+#
+#   include:
+#     - remote: https://raw.githubusercontent.com/cbs-consulting/cds-guard/v0.1.0/ci/gitlab/cds-guard.gitlab-ci.yml
+#
+# or copy the job. Then, in Settings -> Merge requests, turn on "Pipelines must succeed", protect
+# main with "Allowed to push and merge: No one" and "Code owner approval", and run
+# "npx cds-guard codeowners --platform gitlab --write".
+cds-guard:
+  image: node:22
+  stage: test
+  variables:
+    CDS_GUARD_VERSION: "0"
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  script:
+    - if [ -f package-lock.json ]; then npm ci --no-audit --no-fund; fi
+    - npx --yes "cds-guard@${CDS_GUARD_VERSION}" check --junit cds-guard.xml
+  artifacts:
+    when: always
+    reports:
+      junit: cds-guard.xml

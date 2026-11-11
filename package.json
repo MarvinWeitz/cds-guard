@@ -1,0 +1,31 @@
+{
+  "name": "cds-guard",
+  "version": "0.1.0",
+  "description": "Stops accidental changes to protected CDS entities, annotations, code blocks and files in CAP and UI5 projects, on any Git platform.",
+  "keywords": ["sap", "cap", "cds", "ui5", "fiori", "codeowners", "ci", "guard", "lock"],
+  "homepage": "https://github.com/cbs-consulting/cds-guard#readme",
+  "bugs": "https://github.com/cbs-consulting/cds-guard/issues",
+  "repository": { "type": "git", "url": "git+https://github.com/cbs-consulting/cds-guard.git" },
+  "license": "Apache-2.0",
+  "author": "cbs Corporate Business Solutions Unternehmensberatung GmbH",
+  "main": "index.js",
+  "bin": { "cds-guard": "bin/cds-guard.js" },
+  "files": ["bin/", "src/", "index.js", "ci/", "LICENSE", "README.md", "CHANGELOG.md"],
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "test": "node --test \"test/*.test.js\""
+  },
+  "dependencies": {
+    "fast-glob": "3.3.3",
+    "yaml": "2.9.1"
+  },
+  "peerDependencies": {
+    "@sap/cds": ">=8"
+  },
+  "peerDependenciesMeta": {
+    "@sap/cds": { "optional": true }
+  },
+  "devDependencies": {
+    "@sap/cds": "10.2.2"
+  }
+}

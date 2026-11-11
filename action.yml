@@ -1,0 +1,42 @@
+name: cds-guard
+description: Fails the job when a protected CDS entity, annotation, code block or file changed without its lock file.
+author: cbs Corporate Business Solutions Unternehmensberatung GmbH
+branding:
+  icon: shield
+  color: orange
+inputs:
+  root:
+    description: Repository root that holds .guard/protected.yml.
+    default: .
+  version:
+    description: cds-guard version from npm, or "local" to run the copy next to this action.
+    default: "0"
+  install:
+    description: Run "npm ci" in the root first when node_modules is missing, so the project's own @sap/cds is used.
+    default: "true"
+  junit:
+    description: Also write a JUnit report to this file.
+    default: ""
+runs:
+  using: composite
+  steps:
+    - name: Install project dependencies
+      if: inputs.install == 'true'
+      shell: bash
+      working-directory: ${{ inputs.root }}
+      run: |
+        if [ -f package-lock.json ] && [ ! -d node_modules ]; then npm ci --no-audit --no-fund; fi
+    - name: cds-guard check
+      shell: bash
+      env:
+        GUARD_ROOT: ${{ inputs.root }}
+        GUARD_VERSION: ${{ inputs.version }}
+        GUARD_JUNIT: ${{ inputs.junit }}
+      run: |
+        args=(check --root "$GUARD_ROOT")
+        if [ -n "$GUARD_JUNIT" ]; then args+=(--junit "$GUARD_JUNIT"); fi
+        if [ "$GUARD_VERSION" = "local" ]; then
+          node "$GITHUB_ACTION_PATH/bin/cds-guard.js" "${args[@]}"
+        else
+          npx --yes "cds-guard@$GUARD_VERSION" "${args[@]}"
+        fi

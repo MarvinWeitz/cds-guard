@@ -1,0 +1,89 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  merge_group:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test features (${{ matrix.os }}, @sap/cds ${{ matrix.cds }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        cds: ["8", "9", "10"]
+        node: ["22"]
+        include:
+          - os: ubuntu-latest
+            cds: "10"
+            node: "24"
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: ${{ matrix.node }}
+      - run: npm ci --no-audit --no-fund
+      # The tests run against each supported major of @sap/cds, not only the pinned dev dependency.
+      - run: npm install --no-save --no-audit --no-fund @sap/cds@${{ matrix.cds }}
+      - run: npm test
+
+  package:
+    name: Package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: "22"
+      - run: npm ci --no-audit --no-fund
+      - name: Install the packed tarball into the fixture and run it there
+        run: |
+          npm pack
+          cp -r test/fixtures/bookshop "$RUNNER_TEMP/bookshop"
+          cd "$RUNNER_TEMP/bookshop"
+          npm install --no-audit --no-fund "$GITHUB_WORKSPACE"/cds-guard-*.tgz @sap/cds
+          npx cds-guard --version
+          npx cds-guard lock
+          npx cds-guard check
+
+  # cds-guard checks its own fixture through the GitHub Action, as a user's repository would.
+  action:
+    name: Action
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: "22"
+      - run: npm ci --no-audit --no-fund && npx cds-guard lock --root test/fixtures/bookshop
+      - uses: ./
+        with:
+          root: test/fixtures/bookshop
+          version: local
+
+  # One check to require in branch protection, so the matrix can change without updating the
+  # protection rules. It fails when any job above fails or is cancelled.
+  test-features:
+    name: Test features
+    if: ${{ always() }}
+    needs: [test, package, action]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check the results of all jobs
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "Results: $RESULTS"
+          for result in $RESULTS; do
+            if [ "$result" != "success" ]; then
+              echo "::error::A required job did not succeed."
+              exit 1
+            fi
+          done

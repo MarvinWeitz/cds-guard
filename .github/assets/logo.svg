@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <rect x="4" y="4" width="112" height="112" rx="24" fill="#EE7D01" />
+  <!-- code lines; the middle ones sit inside the guarded block, one of them locked -->
+  <path d="M26 30 H62 M26 90 H56" fill="none" stroke="#FCEAD6" stroke-width="5" stroke-linecap="round" />
+  <rect x="20" y="42" width="44" height="36" rx="7" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-dasharray="5 4" />
+  <path d="M29 54 H54 M29 66 H47" fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" />
+  <!-- shield with keyhole; change the first translate value to move it left or right -->
+  <g transform="translate(4 0)">
+  <path d="M84 40 L100 46 V60 C100 70 93 77 84 81 C75 77 68 70 68 60 V46 Z" fill="#FFFFFF" />
+  <circle cx="84" cy="57" r="4.5" fill="#EE7D01" />
+  <path d="M84 60 V68" stroke="#EE7D01" stroke-width="4" stroke-linecap="round" />
+  </g>
+</svg>

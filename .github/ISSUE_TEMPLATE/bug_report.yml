@@ -1,0 +1,66 @@
+name: Bug report
+description: cds-guard reports a change that did not happen, misses one that did, or does not run.
+labels: [bug]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Describe the problem and what you expected to happen instead.
+    validations:
+      required: true
+  - type: textarea
+    id: config
+    attributes:
+      label: The rule
+      description: The rule from `.guard/protected.yml` that is affected. Remove customer names if needed.
+      render: yaml
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: The change you made (for example the CDS before and after) and the commands you ran.
+      placeholder: |
+        1. cds-guard lock
+        2. change `netAmount : Decimal(9,2)` to `Decimal(11,2)` in db/schema.cds
+        3. cds-guard check passes
+    validations:
+      required: true
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      multiple: true
+      options:
+        - CDS entities and elements
+        - CDS annotations
+        - Marker blocks
+        - Files and JSON pointers
+        - codeowners / Azure DevOps policies
+        - CI template (GitHub, Azure Pipelines, Bitbucket, GitLab)
+        - Not sure
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Versions
+      description: Output of `npx cds-guard --version` and `npx cds --version`.
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Operating system, Node.js version, and the CI platform if it fails there.
+      placeholder: Windows 11, Node 22.12, Azure Pipelines
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Output
+      description: The output of `cds-guard check`. It is formatted as code automatically.
+      render: shell

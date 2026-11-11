@@ -1,0 +1,19 @@
+# cds-guard for Bitbucket Pipelines. Merge the "pull-requests" part into your bitbucket-pipelines.yml.
+# Bitbucket shows the JUnit report from test-results/ on the pull request.
+#
+# Then, in Repository settings:
+#   - Branch restrictions for main: "Prevent changes without a pull request" and the merge check
+#     "Minimum number of successful builds" (Bitbucket Cloud Premium for enforcement).
+#   - Run "npx cds-guard codeowners --platform bitbucket --write" and commit CODEOWNERS.
+image: node:22
+
+pipelines:
+  pull-requests:
+    "**":
+      - step:
+          name: cds-guard
+          caches:
+            - node
+          script:
+            - if [ -f package-lock.json ]; then npm ci --no-audit --no-fund; fi
+            - npx --yes cds-guard@0 check --junit test-results/cds-guard.xml

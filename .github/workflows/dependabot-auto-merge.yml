@@ -1,0 +1,35 @@
+name: Dependabot auto-merge
+# Approves Dependabot's minor and patch updates of GitHub Actions and npm dev dependencies and
+# turns on auto-merge, so they merge once the required checks pass. Major updates and runtime
+# dependencies (what users install) wait for a person, who also adds the changelog line.
+#
+# Needs these repository settings:
+#   General -> Pull Requests: "Allow auto-merge"
+#   Actions -> General -> Workflow permissions: "Allow GitHub Actions to create and approve
+#   pull requests" (only if the branch rule requires an approval)
+on: pull_request
+permissions:
+  contents: write
+  pull-requests: write
+jobs:
+  auto-merge:
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - id: metadata
+        uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
+      - name: Approve
+        if: (steps.metadata.outputs.package-ecosystem == 'github_actions' || steps.metadata.outputs.dependency-type == 'direct:development') && (steps.metadata.outputs.update-type == 'version-update:semver-minor' || steps.metadata.outputs.update-type == 'version-update:semver-patch')
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.html_url }}
+        run: gh pr review --approve "$PR"
+      - name: Enable auto-merge
+        if: (steps.metadata.outputs.package-ecosystem == 'github_actions' || steps.metadata.outputs.dependency-type == 'direct:development') && (steps.metadata.outputs.update-type == 'version-update:semver-minor' || steps.metadata.outputs.update-type == 'version-update:semver-patch')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.html_url }}
+        run: |
+          gh pr edit --add-label "no changelog" "$PR"
+          gh pr merge --auto --squash "$PR"

@@ -1,0 +1,42 @@
+# cds-guard step template for Azure Pipelines.
+#
+# Copy this file into your repository (for example to pipelines/cds-guard.yml) and use it in the
+# pipeline that runs as build validation on your main branch:
+#
+#   trigger: none
+#   pr: none              # Azure Repos starts PR builds through the build validation policy
+#   pool:
+#     vmImage: ubuntu-latest
+#   steps:
+#     - template: pipelines/cds-guard.yml
+#
+# Then add the pipeline as a required "Build validation" policy on main, and run
+# "npx cds-guard codeowners --platform azure --write" once to create the reviewer policies.
+parameters:
+  - name: root
+    type: string
+    default: .
+  - name: version
+    type: string
+    default: "0"
+  - name: nodeVersion
+    type: string
+    default: "22.x"
+
+steps:
+  - task: UseNode@1
+    inputs:
+      version: ${{ parameters.nodeVersion }}
+  - script: |
+      if [ -f package-lock.json ]; then npm ci --no-audit --no-fund; fi
+    workingDirectory: ${{ parameters.root }}
+    displayName: Install project dependencies
+  - script: npx --yes cds-guard@${{ parameters.version }} check --root "${{ parameters.root }}" --junit "$(Agent.TempDirectory)/cds-guard.xml"
+    displayName: cds-guard check
+  - task: PublishTestResults@2
+    condition: always()
+    inputs:
+      testResultsFormat: JUnit
+      testResultsFiles: $(Agent.TempDirectory)/cds-guard.xml
+      testRunTitle: cds-guard
+      failTaskOnMissingResultsFile: false

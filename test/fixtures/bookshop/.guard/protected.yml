@@ -1,0 +1,17 @@
+version: 1
+guardOwners: [ "@org/leads" ]
+guardPaths: [ .github/workflows/cds-guard.yml ]
+rules:
+  - id: pricing-model
+    cds: [ my.app.Prices, my.app.Orders.netAmount ]
+    annotations: [ "my.app.Orders:@UI.LineItem", "my.app.Orders:@UI.HeaderInfo" ]
+    approvers: [ "@org/team-pricing", alice ]
+  - id: tax-formula
+    markers: [ tax-calc ]
+    markerFiles: [ "srv/**/*.js" ]
+    approvers: [ bob@example.com ]
+  - id: frozen-ui
+    paths: [ "app/orders/webapp/*.xml" ]
+    json:
+      - file: app/orders/webapp/manifest.json
+        pointers: [ /sap.app/id ]
