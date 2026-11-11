@@ -1,11 +1,13 @@
 name: Release
-# Publishes a tested commit to npm and creates a GitHub release with the version's CHANGELOG.md
-# entry. Started by hand from the Actions tab; nothing is published until a maintainer approves the
-# "npm" environment.
+# Stages a tested commit on npm and creates a GitHub release with the version's CHANGELOG.md
+# entry. Started by hand from the Actions tab; nothing runs until a maintainer approves the "npm"
+# environment.
 #
 # npm accepts the upload because this workflow is the package's trusted publisher (npmjs.com ->
 # @cbs-consulting/cds-guard -> Settings -> Trusted publishing: cbs-consulting/cds-guard, workflow release.yml,
-# environment npm), so no npm token is stored here. The first publish has to be done by hand.
+# environment npm), so no npm token is stored here. The trusted publisher only allows staged
+# publishing, so the version goes live after a maintainer approves it with 2FA, on npmjs.com
+# (Staged Packages) or with `npm stage approve <stage-id>`.
 on:
   workflow_dispatch:
     inputs:
@@ -66,10 +68,10 @@ jobs:
         with:
           node-version: "22"
           registry-url: https://registry.npmjs.org
-      # Trusted publishing needs npm 11.5.1 or later; Node 22 ships npm 10.
-      - run: npm install -g npm@11.6.2 --no-audit --no-fund
+      # Staged publishing needs npm 11.15.0 or later; Node 22 ships npm 10.
+      - run: npm install -g npm@11.21.2 --no-audit --no-fund
       - run: npm ci --no-audit --no-fund
-      - run: npm publish --provenance --access public
+      - run: npm stage publish --provenance --access public
       - name: Create the GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
