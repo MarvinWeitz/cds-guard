@@ -6,7 +6,7 @@ this repository. People are welcome to read them too. What the tool does is in t
 
 ## What this repository is
 
-`cds-guard` (npm package `cds-guard`, Node.js 22+, plain CommonJS, no build step) stops accidental
+`cds-guard` (npm package `@cbs-consulting/cds-guard`, command `cds-guard`, Node.js 22+, plain CommonJS, no build step) stops accidental
 changes to protected CDS entities, elements, annotations, marker blocks, files and JSON values.
 `lock` hashes each protected item into `.guard/locks/<rule>.lock`; `check` compares and fails CI.
 Approval of lock file changes is left to the Git platform's own code owners, which `codeowners`

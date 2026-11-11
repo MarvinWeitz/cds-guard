@@ -38,5 +38,5 @@ runs:
         if [ "$GUARD_VERSION" = "local" ]; then
           node "$GITHUB_ACTION_PATH/bin/cds-guard.js" "${args[@]}"
         else
-          npx --yes "cds-guard@$GUARD_VERSION" "${args[@]}"
+          npx --yes "@cbs-consulting/cds-guard@$GUARD_VERSION" "${args[@]}"
         fi

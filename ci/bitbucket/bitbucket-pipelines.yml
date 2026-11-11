@@ -16,4 +16,4 @@ pipelines:
             - node
           script:
             - if [ -f package-lock.json ]; then npm ci --no-audit --no-fund; fi
-            - npx --yes cds-guard@0 check --junit test-results/cds-guard.xml
+            - npx --yes @cbs-consulting/cds-guard@0 check --junit test-results/cds-guard.xml

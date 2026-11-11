@@ -31,7 +31,7 @@ steps:
       if [ -f package-lock.json ]; then npm ci --no-audit --no-fund; fi
     workingDirectory: ${{ parameters.root }}
     displayName: Install project dependencies
-  - script: npx --yes cds-guard@${{ parameters.version }} check --root "${{ parameters.root }}" --junit "$(Agent.TempDirectory)/cds-guard.xml"
+  - script: npx --yes @cbs-consulting/cds-guard@${{ parameters.version }} check --root "${{ parameters.root }}" --junit "$(Agent.TempDirectory)/cds-guard.xml"
     displayName: cds-guard check
   - task: PublishTestResults@2
     condition: always()

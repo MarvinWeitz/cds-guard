@@ -16,7 +16,7 @@ cds-guard:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
   script:
     - if [ -f package-lock.json ]; then npm ci --no-audit --no-fund; fi
-    - npx --yes "cds-guard@${CDS_GUARD_VERSION}" check --junit cds-guard.xml
+    - npx --yes "@cbs-consulting/cds-guard@${CDS_GUARD_VERSION}" check --junit cds-guard.xml
   artifacts:
     when: always
     reports:

@@ -6,7 +6,7 @@
 
 **Nobody changes a protected CDS entity, annotation or code block by accident, on any Git platform.**
 
-[![npm](https://img.shields.io/npm/v/cds-guard?logo=npm&logoColor=white)](https://www.npmjs.com/package/cds-guard)
+[![npm](https://img.shields.io/npm/v/@cbs-consulting/cds-guard?logo=npm&logoColor=white)](https://www.npmjs.com/package/@cbs-consulting/cds-guard)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D22-339933?logo=node.js&logoColor=white)](package.json)
 [![SAP CAP](https://img.shields.io/badge/%40sap%2Fcds-8%20%7C%209%20%7C%2010-0F4C5C)](#-what-works-where)
@@ -68,11 +68,11 @@ another file is caught and a reformat is not. Markers work in any language that 
 ## 🚀 Quick start
 
 ```bash
-npm install --save-dev cds-guard        # your project already has @sap/cds
-npx cds-guard init                      # creates .guard/protected.yml
+npm install --save-dev @cbs-consulting/cds-guard # your project already has @sap/cds
+npx cds-guard init                               # creates .guard/protected.yml
 # add rules to .guard/protected.yml
-npx cds-guard lock                      # writes .guard/locks/*.lock
-npx cds-guard codeowners --write        # or --platform azure|gitlab|bitbucket
+npx cds-guard lock                               # writes .guard/locks/*.lock
+npx cds-guard codeowners --write                 # or --platform azure|gitlab|bitbucket
 git add .guard .github/CODEOWNERS && git commit -m "Protect the pricing model"
 ```
 

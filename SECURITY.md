@@ -2,7 +2,7 @@
 
 ## Supported Versions
 
-Only the latest release of cds-guard (the npm package `cds-guard` and its CI templates) receives
+Only the latest release of cds-guard (the npm package `@cbs-consulting/cds-guard` and its CI templates) receives
 security fixes. Upgrade to it before you report a problem.
 
 | Version | Supported |

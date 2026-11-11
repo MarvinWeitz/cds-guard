@@ -4,6 +4,6 @@
 FROM node:22-alpine
 ARG CDS_GUARD_VERSION=0
 ARG CDS_VERSION=10
-RUN npm install --global --no-audit --no-fund "cds-guard@${CDS_GUARD_VERSION}" "@sap/cds@${CDS_VERSION}" && npm cache clean --force
+RUN npm install --global --no-audit --no-fund "@cbs-consulting/cds-guard@${CDS_GUARD_VERSION}" "@sap/cds@${CDS_VERSION}" && npm cache clean --force
 ENTRYPOINT ["cds-guard"]
 CMD ["check"]

@@ -4,7 +4,7 @@ name: Release
 # "npm" environment.
 #
 # npm accepts the upload because this workflow is the package's trusted publisher (npmjs.com ->
-# cds-guard -> Settings -> Trusted publishing: cbs-consulting/cds-guard, workflow release.yml,
+# @cbs-consulting/cds-guard -> Settings -> Trusted publishing: cbs-consulting/cds-guard, workflow release.yml,
 # environment npm), so no npm token is stored here. The first publish has to be done by hand.
 on:
   workflow_dispatch:
@@ -44,8 +44,8 @@ jobs:
             echo "::error::CHANGELOG.md has no entry '## $VERSION - YYYY-MM-DD'. Rename 'Unreleased' to it before releasing."
             exit 1
           fi
-          if npm view "cds-guard@$VERSION" version >/dev/null 2>&1; then
-            echo "::error::cds-guard $VERSION is already on npm. Raise the version."
+          if npm view "@cbs-consulting/cds-guard@$VERSION" version >/dev/null 2>&1; then
+            echo "::error::@cbs-consulting/cds-guard $VERSION is already on npm. Raise the version."
             exit 1
           fi
 

@@ -48,7 +48,7 @@ jobs:
           npm pack
           cp -r test/fixtures/bookshop "$RUNNER_TEMP/bookshop"
           cd "$RUNNER_TEMP/bookshop"
-          npm install --no-audit --no-fund "$GITHUB_WORKSPACE"/cds-guard-*.tgz @sap/cds
+          npm install --no-audit --no-fund "$GITHUB_WORKSPACE"/cbs-consulting-cds-guard-*.tgz @sap/cds
           npx cds-guard --version
           npx cds-guard lock
           npx cds-guard check
