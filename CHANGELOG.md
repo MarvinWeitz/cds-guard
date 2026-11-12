@@ -6,6 +6,10 @@ the date.
 
 ## Unreleased
 
+- New `examples/` folder with a complete configuration for GitHub, GitLab, Bitbucket Cloud and
+  Azure DevOps. Each one shows other kinds of rules and how the platform names users, groups,
+  teams and roles as approvers.
+
 ## 0.1.1 - 2026-11-11
 
 - The package is now published from the release workflow, with npm provenance that links each

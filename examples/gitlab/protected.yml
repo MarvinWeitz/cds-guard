@@ -1,0 +1,47 @@
+# cds-guard example for GitLab. Copy to .guard/protected.yml.
+#
+# Owners on GitLab:
+#   carol                 a user, written as @carol in CODEOWNERS
+#   dave@acme.example     the e-mail address of a user
+#   "@acme"               a group; only its direct members can approve
+#   "@acme/sap/backend"   a subgroup, nested as deep as needed
+#   "@@maintainer"        everyone with the Maintainer role in the project (GitLab 17.9 and later).
+#                         "@@developer" and "@@owner" work too. Roles are not inclusive:
+#                         "@@developer" does not include Maintainers.
+# Code owner approval needs GitLab Premium or Ultimate.
+version: 1
+
+cds:
+  root: .
+
+guardOwners: [ "@acme/sap/leads" ]
+guardPaths: [ .gitlab-ci.yml, CODEOWNERS ]
+
+rules:
+  # Only the structure of the data model: elements, types and keys. Annotation changes pass.
+  - id: schema-structure
+    description: Database structure of orders and prices
+    cds: [ my.app.Orders, my.app.Prices ]
+    ignoreAnnotations: true
+    approvers: [ "@acme/sap/backend" ]
+
+  # Only the Fiori annotations, approved by anyone with the Maintainer role.
+  - id: fiori-annotations
+    description: List report and object page of orders
+    annotations: [ "my.app.Orders:@UI.LineItem", "my.app.Orders:@UI.HeaderInfo" ]
+    approvers: [ "@@maintainer" ]
+
+  # A block of code, approved by a user or by an e-mail address.
+  - id: tax-formula
+    description: Tax calculation
+    markers: [ tax-calc ]
+    markerFiles: [ "srv/**/*.js" ]
+    approvers: [ carol, dave@acme.example ]
+
+  # Values in manifest.json, approved by a member of the top-level group.
+  - id: app-identity
+    description: Fiori app id and routing
+    json:
+      - file: app/orders/webapp/manifest.json
+        pointers: [ /sap.app/id, /sap.ui5/routing ]
+    approvers: [ "@acme" ]
