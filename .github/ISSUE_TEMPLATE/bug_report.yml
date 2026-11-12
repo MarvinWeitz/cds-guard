@@ -47,7 +47,7 @@ body:
     id: version
     attributes:
       label: Versions
-      description: Output of `npx cds-guard --version` and `npx cds --version`.
+      description: Output of `npx @cbs-consulting/cds-guard --version` and `npx cds --version`.
     validations:
       required: true
   - type: input

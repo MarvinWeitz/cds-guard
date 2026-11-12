@@ -5,7 +5,7 @@
 #
 # or copy the job. Then, in Settings -> Merge requests, turn on "Pipelines must succeed", protect
 # main with "Allowed to push and merge: No one" and "Code owner approval", and run
-# "npx cds-guard codeowners --platform gitlab --write".
+# "npx @cbs-consulting/cds-guard codeowners --platform gitlab --write".
 cds-guard:
   image: node:22
   stage: test

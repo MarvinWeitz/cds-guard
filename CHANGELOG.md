@@ -9,6 +9,9 @@ the date.
 - New `examples/` folder with a complete configuration for GitHub, GitLab, Bitbucket Cloud and
   Azure DevOps. Each one shows other kinds of rules and how the platform names users, groups,
   teams and roles as approvers.
+- Docs, CI templates and the hint that `check` prints now run `npx @cbs-consulting/cds-guard`.
+  A plain `npx cds-guard` outside a project that has the package installed fetches the unscoped
+  `cds-guard` package from npm, which is not this tool.
 
 ## 0.1.1 - 2026-11-11
 

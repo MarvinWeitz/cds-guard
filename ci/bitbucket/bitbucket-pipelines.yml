@@ -4,7 +4,7 @@
 # Then, in Repository settings:
 #   - Branch restrictions for main: "Prevent changes without a pull request" and the merge check
 #     "Minimum number of successful builds" (Bitbucket Cloud Premium for enforcement).
-#   - Run "npx cds-guard codeowners --platform bitbucket --write" and commit CODEOWNERS.
+#   - Run "npx @cbs-consulting/cds-guard codeowners --platform bitbucket --write" and commit CODEOWNERS.
 image: node:22
 
 pipelines:

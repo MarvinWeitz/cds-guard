@@ -50,7 +50,7 @@ function formatText (result) {
     out.push(`✗ rule "${v.rule}"${v.description ? ` (${v.description})` : ''}`)
     for (const p of v.problems) out.push(`    ${p.kind.padEnd(13)} ${p.item}  ${p.detail}`)
     const who = v.approvers.length ? v.approvers.join(', ') : 'the guard owners'
-    out.push(`  If this change is intended: run "npx cds-guard lock --rule ${v.rule}", commit the lock file and get approval from ${who}.\n`)
+    out.push(`  If this change is intended: run "npx @cbs-consulting/cds-guard lock --rule ${v.rule}", commit the lock file and get approval from ${who}.\n`)
   }
   return out.join('\n')
 }

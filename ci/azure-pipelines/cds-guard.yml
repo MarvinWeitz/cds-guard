@@ -11,7 +11,7 @@
 #     - template: pipelines/cds-guard.yml
 #
 # Then add the pipeline as a required "Build validation" policy on main, and run
-# "npx cds-guard codeowners --platform azure --write" once to create the reviewer policies.
+# "npx @cbs-consulting/cds-guard codeowners --platform azure --write" once to create the reviewer policies.
 parameters:
   - name: root
     type: string

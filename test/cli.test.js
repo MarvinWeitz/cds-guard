@@ -15,7 +15,7 @@ test('exit codes: 0 ok, 1 changed, 2 config error', async t => {
   p.edit('srv/tax.js', '0.19', '0.2')
   const r = await run(['check', '--root', p.dir])
   assert.equal(r.code, 1)
-  assert.match(r.err, /npx cds-guard lock --rule tax-formula/)
+  assert.match(r.err, /npx @cbs-consulting\/cds-guard lock --rule tax-formula/)
   assert.match(r.err, /bob@example.com/)
   assert.equal((await run(['check', '--root', path.join(p.dir, 'nope')])).code, 2)
   assert.equal((await run(['bogus'])).code, 2)

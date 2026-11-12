@@ -8,7 +8,7 @@
 #   "@acme-ws/ux:all"              every member of the group (least_busy(N) works too)
 #   "@teams/finance"               a team defined in .bitbucket/teams.yaml (see teams.yaml)
 # Bitbucket reads .bitbucket/CODEOWNERS, so write the block there:
-#   npx cds-guard codeowners --platform bitbucket --write .bitbucket/CODEOWNERS
+#   npx @cbs-consulting/cds-guard codeowners --platform bitbucket --write .bitbucket/CODEOWNERS
 version: 1
 
 cds:

@@ -25,12 +25,12 @@ always work with the current version.
 | JSON values (`json`) | `frozen-ui` | `app-identity` | `frozen-ui` | `frozen-ui` |
 
 To use one, copy `protected.yml` to `.guard/protected.yml`, change the names and items to your
-project's, then run `npx cds-guard lock` and the `codeowners` command below.
+project's, then run `npx @cbs-consulting/cds-guard lock` and the `codeowners` command below.
 
 ## GitHub
 
 ```bash
-npx cds-guard codeowners --write   # updates the block in .github/CODEOWNERS
+npx @cbs-consulting/cds-guard codeowners --write   # updates the block in .github/CODEOWNERS
 ```
 
 - `alice` becomes `@alice`. A team is `@org/team` and needs write access to the repository.
@@ -42,7 +42,7 @@ npx cds-guard codeowners --write   # updates the block in .github/CODEOWNERS
 ## GitLab
 
 ```bash
-npx cds-guard codeowners --platform gitlab --write   # updates the [cds-guard] section in CODEOWNERS
+npx @cbs-consulting/cds-guard codeowners --platform gitlab --write   # updates the [cds-guard] section in CODEOWNERS
 ```
 
 - Users are `@user` or an e-mail address. Groups are `@group` and subgroups `@group/subgroup`;
@@ -55,7 +55,7 @@ npx cds-guard codeowners --platform gitlab --write   # updates the [cds-guard] s
 ## Bitbucket Cloud
 
 ```bash
-npx cds-guard codeowners --platform bitbucket --write .bitbucket/CODEOWNERS
+npx @cbs-consulting/cds-guard codeowners --platform bitbucket --write .bitbucket/CODEOWNERS
 ```
 
 - Bitbucket Cloud reads `.bitbucket/CODEOWNERS`, so pass that path to `--write`. Put
@@ -71,7 +71,7 @@ npx cds-guard codeowners --platform bitbucket --write .bitbucket/CODEOWNERS
 ## Azure DevOps
 
 ```bash
-npx cds-guard codeowners --platform azure --write   # writes .guard/azure-policies.sh
+npx @cbs-consulting/cds-guard codeowners --platform azure --write   # writes .guard/azure-policies.sh
 REPO_ID=$(az repos show --repository my-repo --query id -o tsv) sh .guard/azure-policies.sh
 ```
 

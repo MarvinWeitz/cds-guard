@@ -28,13 +28,13 @@ approvers, through your Git platform's own code owners. No API tokens, no platfo
 the same setup works on GitHub, Azure DevOps, Bitbucket and GitLab.
 
 ```text
-$ npx cds-guard check
+$ npx @cbs-consulting/cds-guard check
 cds-guard: protected items changed.
 
 ✗ rule "pricing-model" (Prices and order amounts)
     changed       cds:my.app.Orders.netAmount  content changed
     changed       annotation:my.app.Orders:@UI.LineItem  content changed
-  If this change is intended: run "npx cds-guard lock --rule pricing-model", commit the lock file and get approval from @my-org/team-pricing.
+  If this change is intended: run "npx @cbs-consulting/cds-guard lock --rule pricing-model", commit the lock file and get approval from @my-org/team-pricing.
 ```
 
 ## ✨ What works where
@@ -63,16 +63,16 @@ another file is caught and a reformat is not. Markers work in any language that 
 | Azure DevOps | [`ci/azure-pipelines/cds-guard.yml`](ci/azure-pipelines/cds-guard.yml) | Branch policy "Automatically included reviewers", required, with path filter | `az repos policy required-reviewer` script |
 | Bitbucket | [`ci/bitbucket/bitbucket-pipelines.yml`](ci/bitbucket/bitbucket-pipelines.yml) | CODEOWNERS (enforced with a merge check; check your plan) | `CODEOWNERS` block |
 | GitLab | [`ci/gitlab/cds-guard.gitlab-ci.yml`](ci/gitlab/cds-guard.gitlab-ci.yml) | CODEOWNERS + "Code owner approval" (Premium) | `CODEOWNERS` block with a `[cds-guard]` section |
-| Anything else (Jenkins, …) | [`Dockerfile`](Dockerfile) or `npx cds-guard check` | whatever path-based reviewers the platform has | – |
+| Anything else (Jenkins, …) | [`Dockerfile`](Dockerfile) or `npx @cbs-consulting/cds-guard check` | whatever path-based reviewers the platform has | – |
 
 ## 🚀 Quick start
 
 ```bash
-npm install --save-dev @cbs-consulting/cds-guard # your project already has @sap/cds
-npx cds-guard init                               # creates .guard/protected.yml
+npm install --save-dev @cbs-consulting/cds-guard   # your project already has @sap/cds
+npx @cbs-consulting/cds-guard init                 # creates .guard/protected.yml
 # add rules to .guard/protected.yml
-npx cds-guard lock                               # writes .guard/locks/*.lock
-npx cds-guard codeowners --write                 # or --platform azure|gitlab|bitbucket
+npx @cbs-consulting/cds-guard lock                 # writes .guard/locks/*.lock
+npx @cbs-consulting/cds-guard codeowners --write   # or --platform azure|gitlab|bitbucket
 git add .guard .github/CODEOWNERS && git commit -m "Protect the pricing model"
 ```
 
@@ -187,7 +187,7 @@ jobs:
 
 In a branch ruleset (or branch protection) for main: "Require a pull request before merging",
 "Require review from Code Owners", and "Require status checks to pass" with `cds-guard`. Then
-`npx cds-guard codeowners --write`. List the workflow file in `guardPaths` so nobody can switch
+`npx @cbs-consulting/cds-guard codeowners --write`. List the workflow file in `guardPaths` so nobody can switch
 the check off unnoticed.
 </details>
 
@@ -199,7 +199,7 @@ and reference it from a pipeline (the comment at the top shows how). In the bran
 main: add the pipeline as a required **Build validation**. Then create the reviewer policies once:
 
 ```bash
-npx cds-guard codeowners --platform azure --write   # writes .guard/azure-policies.sh
+npx @cbs-consulting/cds-guard codeowners --platform azure --write   # writes .guard/azure-policies.sh
 REPO_ID=$(az repos show --repository my-repo --query id -o tsv) sh .guard/azure-policies.sh
 ```
 
@@ -213,7 +213,7 @@ branch policy screen.
 Merge [`ci/bitbucket/bitbucket-pipelines.yml`](ci/bitbucket/bitbucket-pipelines.yml) into your
 pipeline. In the branch restrictions of main: prevent changes without a pull request, and add the
 merge checks for successful builds and code owner approval (enforcing merge checks needs Bitbucket
-Cloud Premium, or Data Center). Then `npx cds-guard codeowners --platform bitbucket --write`.
+Cloud Premium, or Data Center). Then `npx @cbs-consulting/cds-guard codeowners --platform bitbucket --write`.
 </details>
 
 <details>
@@ -221,13 +221,13 @@ Cloud Premium, or Data Center). Then `npx cds-guard codeowners --platform bitbuc
 
 Include [`ci/gitlab/cds-guard.gitlab-ci.yml`](ci/gitlab/cds-guard.gitlab-ci.yml). Turn on
 "Pipelines must succeed", protect main with "Allowed to push and merge: No one" and "Code owner
-approval" (Premium), then `npx cds-guard codeowners --platform gitlab --write`.
+approval" (Premium), then `npx @cbs-consulting/cds-guard codeowners --platform gitlab --write`.
 </details>
 
 <details>
 <summary><b>Other CI systems</b></summary>
 
-Run `npx cds-guard check` after `npm ci`, or the Docker image without installing anything:
+Run `npx @cbs-consulting/cds-guard check` after `npm ci`, or the Docker image without installing anything:
 
 ```bash
 docker run --rm -v "$PWD:/repo" -w /repo ghcr.io/cbs-consulting/cds-guard check
