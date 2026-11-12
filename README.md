@@ -129,6 +129,9 @@ rules:
 | `json` | Files and [JSON pointers](https://datatracker.ietf.org/doc/html/rfc6901) inside them. |
 | `approvers` | Who approves changes, in the format of your platform: `@user`, `@org/team`, e-mail address, or for Azure DevOps e-mail addresses and group names. Without approvers, `guardOwners` approve. |
 
+[`examples/`](examples) has a complete configuration for each platform, with different kinds of
+rules and the ways each platform names users, groups and teams.
+
 Changing which items a rule protects needs a new lock (`cds-guard check` reports
 `scope-changed`). Changing only `approvers` or `description` does not; run
 `cds-guard codeowners --write` instead.

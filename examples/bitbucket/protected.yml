@@ -1,0 +1,47 @@
+# cds-guard example for Bitbucket Cloud. Copy to .guard/protected.yml.
+#
+# Owners on Bitbucket Cloud:
+#   eve                            a user, written as @eve in CODEOWNERS
+#   frank@acme.example             the e-mail address of a user
+#   "@acme-ws/pricing"             a group of the workspace "acme-ws"; one random member is added
+#   "@acme-ws/pricing:random(2)"   two random members of the group
+#   "@acme-ws/ux:all"              every member of the group (least_busy(N) works too)
+#   "@teams/finance"               a team defined in .bitbucket/teams.yaml (see teams.yaml)
+# Bitbucket reads .bitbucket/CODEOWNERS, so write the block there:
+#   npx cds-guard codeowners --platform bitbucket --write .bitbucket/CODEOWNERS
+version: 1
+
+cds:
+  root: .
+
+guardOwners: [ "@acme-ws/cap-leads:all" ]
+guardPaths: [ bitbucket-pipelines.yml, .bitbucket/CODEOWNERS, .bitbucket/teams.yaml ]
+
+rules:
+  # An entity and an element. Two random members of the pricing group are added as reviewers.
+  - id: pricing-model
+    description: Prices and order amounts
+    cds: [ my.app.Prices, my.app.Orders.netAmount ]
+    approvers: [ "@acme-ws/pricing:random(2)" ]
+
+  # Annotations. Every member of the UX group is added.
+  - id: order-ui
+    description: List report and object page of orders
+    annotations: [ "my.app.Orders:@UI.LineItem", "my.app.Orders:@UI.HeaderInfo" ]
+    approvers: [ "@acme-ws/ux:all" ]
+
+  # A block of code, reviewed by a team from teams.yaml.
+  - id: tax-formula
+    description: Tax calculation
+    markers: [ tax-calc ]
+    markerFiles: [ "srv/**/*.js" ]
+    approvers: [ "@teams/finance" ]
+
+  # Files and JSON values, reviewed by a user and an e-mail address.
+  - id: frozen-ui
+    description: Fiori app id and the local annotation file
+    paths: [ "app/orders/webapp/*.xml" ]
+    json:
+      - file: app/orders/webapp/manifest.json
+        pointers: [ /sap.app/id ]
+    approvers: [ eve, frank@acme.example ]

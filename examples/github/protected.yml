@@ -1,0 +1,46 @@
+# cds-guard example for GitHub. Copy to .guard/protected.yml.
+#
+# Owners on GitHub:
+#   alice                     a user, written as @alice in CODEOWNERS
+#   "@acme/pricing"           a team of the organization "acme"; it needs write access to the repository
+#   tax.office@acme.example   the e-mail address of a GitHub user (verified on their account)
+# Any one of the owners listed for a file can approve it.
+version: 1
+
+cds:
+  root: .
+
+# The guard itself: protected.yml, lock files of rules without approvers, and the files below.
+guardOwners: [ "@acme/cap-leads" ]
+guardPaths: [ .github/workflows/cds-guard.yml, .github/CODEOWNERS ]
+
+rules:
+  # A whole entity and one element of another entity, with their annotations. A team or a user.
+  - id: pricing-model
+    description: Prices and order amounts
+    cds: [ my.app.Prices, my.app.Orders.netAmount ]
+    approvers: [ "@acme/pricing", alice ]
+
+  # Only some annotations, on an entity and on an element. Either team approves.
+  - id: order-ui
+    description: List report columns, object page header and the label of the net amount
+    annotations:
+      - "my.app.Orders:@UI.LineItem"
+      - "my.app.Orders:@UI.HeaderInfo"
+      - "my.app.Orders.netAmount:@title"
+    approvers: [ "@acme/ux", "@acme/pricing" ]
+
+  # The code between "// @protected-begin tax-calc" and "// @protected-end".
+  - id: tax-formula
+    description: Tax calculation
+    markers: [ tax-calc ]
+    markerFiles: [ "srv/**/*.js" ]
+    approvers: [ tax.office@acme.example ]
+
+  # Whole files and single values in manifest.json. No approvers: the guard owners approve.
+  - id: frozen-ui
+    description: Fiori app id, routing and the local annotation file
+    paths: [ "app/orders/webapp/*.xml" ]
+    json:
+      - file: app/orders/webapp/manifest.json
+        pointers: [ /sap.app/id, /sap.ui5/routing ]

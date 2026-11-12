@@ -1,0 +1,45 @@
+# cds-guard example for Azure DevOps. Copy to .guard/protected.yml.
+#
+# Azure DevOps has no CODEOWNERS. "cds-guard codeowners --platform azure" writes a script that
+# creates one required-reviewer branch policy per lock file. Owners on Azure DevOps:
+#   alice@acme.example          a user, by e-mail address
+#   '[Bookshop]\Pricing Team'   a group or team of the project "Bookshop", named as Azure DevOps
+#                               shows it; one member's approval counts for the group
+# Write group names in single quotes, so YAML keeps the backslash.
+version: 1
+
+cds:
+  root: .
+
+guardOwners: [ '[Bookshop]\CAP Leads' ]
+guardPaths: [ azure-pipelines.yml ]
+
+rules:
+  # Entity, element and an annotation, reviewed by two people.
+  - id: pricing-model
+    description: Prices and order amounts
+    cds: [ my.app.Prices, my.app.Orders.netAmount ]
+    annotations: [ "my.app.Orders:@UI.LineItem" ]
+    approvers: [ alice@acme.example, bob@acme.example ]
+
+  # Structure only, reviewed by a group and a person.
+  - id: schema-structure
+    description: Database structure of orders
+    cds: [ my.app.Orders ]
+    ignoreAnnotations: true
+    approvers: [ '[Bookshop]\Backend Team', carol@acme.example ]
+
+  # A block of code. Any one member of the group approves.
+  - id: tax-formula
+    description: Tax calculation
+    markers: [ tax-calc ]
+    markerFiles: [ "srv/**/*.js" ]
+    approvers: [ '[Bookshop]\Finance Approvers' ]
+
+  # Files and JSON values. No approvers: the guard owners approve.
+  - id: frozen-ui
+    description: Fiori app id, routing and the local annotation file
+    paths: [ "app/orders/webapp/*.xml" ]
+    json:
+      - file: app/orders/webapp/manifest.json
+        pointers: [ /sap.app/id, /sap.ui5/routing ]

@@ -1,0 +1,8 @@
+# Copy to .bitbucket/teams.yaml (Bitbucket Cloud). CODEOWNERS refers to it as "@teams/finance".
+finance:
+  contributors:
+    - "@grace"
+    - heidi@acme.example
+  reviews:
+    strategy: least_busy
+    select: 1
