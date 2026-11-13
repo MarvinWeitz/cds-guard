@@ -23,6 +23,11 @@ function hashJson (value) {
   return sha256(JSON.stringify(canonical(value)))
 }
 
+/** Readable form of what hashJson hashes, for showing differences. Never hashed. */
+function prettyJson (value) {
+  return JSON.stringify(canonical(value), null, 2)
+}
+
 /** Normalise line endings and trailing whitespace so formatting noise does not count. */
 function normaliseText (text) {
   return text.replace(/\r\n?/g, '\n').split('\n').map(l => l.replace(/\s+$/, '')).join('\n').replace(/\n+$/, '')
@@ -32,4 +37,4 @@ function hashText (text) {
   return sha256(normaliseText(text))
 }
 
-module.exports = { canonical, hashJson, hashText, normaliseText, sha256 }
+module.exports = { canonical, hashJson, prettyJson, hashText, normaliseText, sha256 }

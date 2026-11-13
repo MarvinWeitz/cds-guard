@@ -2,7 +2,7 @@
 const fs = require('node:fs')
 const path = require('node:path')
 const fg = require('fast-glob')
-const { hashText, hashJson } = require('./hash')
+const { hashText, hashJson, normaliseText, prettyJson } = require('./hash')
 
 const DEFAULT_IGNORE = ['**/node_modules/**', '**/.git/**', 'gen/**', '**/dist/**', '.guard/**']
 
@@ -17,7 +17,10 @@ function collectPaths (rule, root, config) {
   for (const pattern of rule.paths) {
     const files = listFiles(root, [pattern], config.ignore)
     if (!files.length) { items[`file:${pattern}`] = { missing: 'no file matches this pattern' }; continue }
-    for (const f of files) items[`file:${toPosix(f)}`] = { hash: hashText(fs.readFileSync(path.join(root, f), 'utf8')) }
+    for (const f of files) {
+      const text = fs.readFileSync(path.join(root, f), 'utf8')
+      items[`file:${toPosix(f)}`] = { hash: hashText(text), value: normaliseText(text), file: toPosix(f) }
+    }
   }
   return items
 }
@@ -44,9 +47,10 @@ function collectJson (rule, root) {
     try { data = JSON.parse(fs.readFileSync(abs, 'utf8')) } catch (e) { err = fs.existsSync(abs) ? `invalid JSON: ${e.message}` : 'file not found' }
     for (const p of pointers) {
       const key = `json:${toPosix(file)}#${p}`
-      if (err) { items[key] = { missing: err }; continue }
+      const where = { file: toPosix(file) }
+      if (err) { items[key] = { missing: err, ...where }; continue }
       const r = getPointer(data, p)
-      items[key] = r.found ? { hash: hashJson(r.value) } : { missing: 'pointer not found' }
+      items[key] = r.found ? { hash: hashJson(r.value), value: prettyJson(r.value), ...where } : { missing: 'pointer not found', ...where }
     }
   }
   return items

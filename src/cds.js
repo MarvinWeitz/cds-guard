@@ -2,11 +2,11 @@
 const path = require('node:path')
 const fs = require('node:fs')
 const { createRequire } = require('node:module')
-const { hashJson } = require('./hash')
+const { hashJson, prettyJson } = require('./hash')
 
 /** Prefer the project's own @sap/cds so hashes match what the app compiles with. */
-function resolveCds (cdsRoot) {
-  const candidates = [path.join(cdsRoot, 'package.json'), __filename]
+function resolveCds (cdsRoot, from = cdsRoot) {
+  const candidates = [path.join(from, 'package.json'), path.join(cdsRoot, 'package.json'), __filename]
   for (const from of candidates) {
     try { return createRequire(from)('@sap/cds') } catch { /* try next */ }
   }
@@ -14,10 +14,10 @@ function resolveCds (cdsRoot) {
 }
 
 let cached = null
-async function loadModel (cdsRoot, model = []) {
+async function loadModel (cdsRoot, model = [], { cdsFrom } = {}) {
   if (cached && cached.root === cdsRoot) return cached
   if (!fs.existsSync(cdsRoot)) throw new Error(`cds.root "${cdsRoot}" does not exist`)
-  const cds = resolveCds(cdsRoot)
+  const cds = resolveCds(cdsRoot, cdsFrom)
   cds.root = cdsRoot
   // A fresh resolve cache per run, so files added since the last run are found.
   const files = cds.resolve(model.length ? model.map(m => path.resolve(cdsRoot, m)) : '*', { cache: {} })
@@ -67,15 +67,23 @@ function pickAnnotation (node, anno) {
   return out
 }
 
-async function collectCds (rule, config) {
+/** Where a definition or element is declared, relative to the repository root. */
+function locate (node, root, cdsRoot) {
+  const loc = node && node.$location
+  if (!loc || !loc.file) return {}
+  return { file: path.relative(root, path.resolve(cdsRoot, loc.file)).split(path.sep).join('/'), line: loc.line }
+}
+
+async function collectCds (rule, config, root = config.cdsRoot) {
   const items = {}
   if (!rule.cds.length && !rule.annotations.length) return items
-  const { csn } = await loadModel(config.cdsRoot, config.cdsModel)
+  const { csn } = await loadModel(config.cdsRoot, config.cdsModel, { cdsFrom: config.cdsFrom })
   for (const name of rule.cds) {
     const key = `cds:${name}`
     const t = resolveTarget(csn, name)
     if (!t) { items[key] = { missing: 'not found in CDS model (deleted or renamed?)' }; continue }
-    items[key] = { hash: hashJson(rule.ignoreAnnotations ? stripAnnotations(t.def) : t.def) }
+    const value = rule.ignoreAnnotations ? stripAnnotations(t.def) : t.def
+    items[key] = { hash: hashJson(value), value: prettyJson(value), ...locate(t.def, root, config.cdsRoot) }
   }
   for (const spec of rule.annotations) {
     const key = `annotation:${spec}`
@@ -85,7 +93,7 @@ async function collectCds (rule, config) {
     if (!t) { items[key] = { missing: `target "${m[1]}" not found in CDS model` }; continue }
     const picked = pickAnnotation(t.def, m[2])
     if (!Object.keys(picked).length) { items[key] = { missing: `annotation ${m[2]} not present on ${m[1]}` }; continue }
-    items[key] = { hash: hashJson(picked) }
+    items[key] = { hash: hashJson(picked), value: prettyJson(picked), ...locate(t.def, root, config.cdsRoot) }
   }
   return items
 }

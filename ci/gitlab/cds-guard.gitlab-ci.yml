@@ -16,8 +16,11 @@ cds-guard:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
   script:
     - if [ -f package-lock.json ]; then npm ci --no-audit --no-fund; fi
-    - npx --yes "@cbs-consulting/cds-guard@${CDS_GUARD_VERSION}" check --junit cds-guard.xml
+    # The Code Quality report marks each finding in the merge request. --base shows how each
+    # changed item looked on the target branch.
+    - npx --yes "@cbs-consulting/cds-guard@${CDS_GUARD_VERSION}" check --junit cds-guard.xml --codequality gl-code-quality-report.json ${CI_MERGE_REQUEST_DIFF_BASE_SHA:+--base "$CI_MERGE_REQUEST_DIFF_BASE_SHA"}
   artifacts:
     when: always
     reports:
       junit: cds-guard.xml
+      codequality: gl-code-quality-report.json

@@ -11,7 +11,8 @@
 #     - template: pipelines/cds-guard.yml
 #
 # Then add the pipeline as a required "Build validation" policy on main, and run
-# "npx cds-guard codeowners --platform azure --write" once to create the reviewer policies.
+# "npx @cbs-consulting/cds-guard codeowners --platform azure --write" and the script it writes to
+# create the reviewer policies. Run both again whenever approvers change.
 parameters:
   - name: root
     type: string
@@ -31,7 +32,11 @@ steps:
       if [ -f package-lock.json ]; then npm ci --no-audit --no-fund; fi
     workingDirectory: ${{ parameters.root }}
     displayName: Install project dependencies
-  - script: npx --yes @cbs-consulting/cds-guard@${{ parameters.version }} check --root "${{ parameters.root }}" --junit "$(Agent.TempDirectory)/cds-guard.xml"
+  # --format azure marks each finding on its file and line. In pull request builds, --base shows
+  # how each changed item looked on the target branch.
+  - script: |
+      BASE="$SYSTEM_PULLREQUEST_TARGETBRANCH"
+      npx --yes @cbs-consulting/cds-guard@${{ parameters.version }} check --root "${{ parameters.root }}" --format azure --junit "$(Agent.TempDirectory)/cds-guard.xml" ${BASE:+--base "$BASE"}
     displayName: cds-guard check
   - task: PublishTestResults@2
     condition: always()

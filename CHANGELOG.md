@@ -9,6 +9,22 @@ the date.
 - New `examples/` folder with a complete configuration for GitHub, GitLab, Bitbucket Cloud and
   Azure DevOps. Each one shows other kinds of rules and how the platform names users, groups,
   teams and roles as approvers.
+- `check` now fails when a generated CODEOWNERS block or `.guard/azure-policies.sh` no longer
+  matches `protected.yml`, so a changed approver list can't be forgotten. After upgrading, run
+  `cds-guard codeowners --write` once: the block now also gives the guard owners the CODEOWNERS
+  file itself. `cds-guard codeowners --check` runs only this comparison.
+- `check --base REF` shows how each changed item looked at a git ref, as a short diff under the
+  finding. The GitHub Action and the CI templates pass the pull request's target branch.
+- `check --format github` and `--format azure` mark each finding on its file and line in the
+  pull request, and `--codequality FILE` writes a GitLab Code Quality report. The GitHub Action,
+  the Azure Pipelines template and the GitLab template use them.
+- `lock` lists what changed in each lock file and leaves lock files without changes untouched.
+- `codeowners --platform bitbucket --write` writes `.bitbucket/CODEOWNERS`, where Bitbucket
+  reads it. An existing `CODEOWNERS` in the repository root is still checked.
+- The Azure DevOps policy script replaces the policies of earlier runs, so it can run again after
+  approvers change.
+- Each release moves the `v0` tag that `uses: cbs-consulting/cds-guard@v0` points at, and
+  publishes the Docker image `ghcr.io/cbs-consulting/cds-guard`.
 
 ## 0.1.1 - 2026-11-11
 
