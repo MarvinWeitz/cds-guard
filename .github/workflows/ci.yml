@@ -53,23 +53,6 @@ jobs:
           npx cds-guard lock
           npx cds-guard check
 
-  # The Docker image, built as the release builds it, checks the fixture.
-  docker:
-    name: Docker image
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
-        with:
-          node-version: "22"
-      - run: npm pack
-      - run: docker build -t cds-guard .
-      - name: Lock and check the fixture with the image
-        run: |
-          cp -r test/fixtures/bookshop "$RUNNER_TEMP/bookshop"
-          docker run --rm -v "$RUNNER_TEMP/bookshop:/repo" -w /repo cds-guard lock
-          docker run --rm -v "$RUNNER_TEMP/bookshop:/repo" -w /repo cds-guard check
-
   # cds-guard checks its own fixture through the GitHub Action, as a user's repository would.
   action:
     name: Action
@@ -90,7 +73,7 @@ jobs:
   test-features:
     name: Test features
     if: ${{ always() }}
-    needs: [test, package, docker, action]
+    needs: [test, package, action]
     runs-on: ubuntu-latest
     steps:
       - name: Check the results of all jobs

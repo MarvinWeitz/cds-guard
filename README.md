@@ -63,7 +63,7 @@ another file is caught and a reformat is not. Markers work in any language that 
 | Azure DevOps | [`ci/azure-pipelines/cds-guard.yml`](ci/azure-pipelines/cds-guard.yml) | Branch policy "Automatically included reviewers", required, with path filter | `az repos policy required-reviewer` script |
 | Bitbucket | [`ci/bitbucket/bitbucket-pipelines.yml`](ci/bitbucket/bitbucket-pipelines.yml) | CODEOWNERS (enforced with a merge check; check your plan) | `.bitbucket/CODEOWNERS` block |
 | GitLab | [`ci/gitlab/cds-guard.gitlab-ci.yml`](ci/gitlab/cds-guard.gitlab-ci.yml) | CODEOWNERS + "Code owner approval" (Premium) | `CODEOWNERS` block with a `[cds-guard]` section |
-| Anything else (Jenkins, …) | [`Dockerfile`](Dockerfile) or `npx cds-guard check` | whatever path-based reviewers the platform has | – |
+| Anything else (Jenkins, …) | `npx @cbs-consulting/cds-guard check` | whatever path-based reviewers the platform has | – |
 
 ## 🚀 Quick start
 
@@ -257,10 +257,11 @@ approval" (Premium), then `npx cds-guard codeowners --platform gitlab --write`.
 <details>
 <summary><b>Other CI systems</b></summary>
 
-Run `npx cds-guard check` after `npm ci`, or the Docker image without installing anything:
+Run `npx @cbs-consulting/cds-guard check` after `npm ci`, so the project's own `@sap/cds`
+compiles the model. On an agent without Node.js, run both in a `node:22` container:
 
 ```bash
-docker run --rm -v "$PWD:/repo" -w /repo ghcr.io/cbs-consulting/cds-guard check
+docker run --rm -v "$PWD:/repo" -w /repo node:22 sh -c "npm ci && npx --yes @cbs-consulting/cds-guard check"
 ```
 </details>
 

@@ -23,8 +23,9 @@ the date.
   reads it. An existing `CODEOWNERS` in the repository root is still checked.
 - The Azure DevOps policy script replaces the policies of earlier runs, so it can run again after
   approvers change.
-- Each release moves the `v0` tag that `uses: cbs-consulting/cds-guard@v0` points at, and
-  publishes the Docker image `ghcr.io/cbs-consulting/cds-guard`.
+- Each release moves the `v0` tag that `uses: cbs-consulting/cds-guard@v0` points at.
+- There is no Docker image any more. CI systems without Node.js run `npx @cbs-consulting/cds-guard
+  check` in a `node:22` container, after `npm ci` so the project's own `@sap/cds` is used.
 
 ## 0.1.1 - 2026-11-11
 

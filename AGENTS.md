@@ -23,7 +23,7 @@ generates. The tool never calls a Git platform API.
 | `src/hash.js` | Canonical JSON and text normalisation. Changing it changes every user's hashes. |
 | `src/lock.js`, `src/check.js` | Lock file writing and comparison, text and JUnit output. |
 | `src/codeowners.js` | CODEOWNERS blocks and the Azure DevOps policy script. |
-| `action.yml`, `ci/`, `Dockerfile` | CI templates for GitHub, Azure Pipelines, Bitbucket, GitLab and other systems. |
+| `action.yml`, `ci/` | CI templates for GitHub, Azure Pipelines, Bitbucket, GitLab and other systems. |
 | `test/` | `node:test` suite; `test/fixtures/bookshop` is a small CAP project. |
 
 ## Commands

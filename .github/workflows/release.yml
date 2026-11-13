@@ -1,7 +1,6 @@
 name: Release
 # Stages a tested commit on npm, creates a GitHub release with the version's CHANGELOG.md
-# entry, moves the major tag (v0, v1, ...) that `uses: cbs-consulting/cds-guard@v0` points at,
-# and pushes the Docker image ghcr.io/cbs-consulting/cds-guard. Started by hand from the Actions tab; nothing runs until a maintainer approves the "npm"
+# entry, and moves the major tag (v0, v1, ...) that `uses: cbs-consulting/cds-guard@v0` points at. Started by hand from the Actions tab; nothing runs until a maintainer approves the "npm"
 # environment.
 #
 # npm accepts the upload because this workflow is the package's trusted publisher (npmjs.com ->
@@ -94,33 +93,3 @@ jobs:
             gh api -X POST "repos/$GITHUB_REPOSITORY/git/refs" -f ref="refs/tags/$TAG" -f sha="$SHA"
           fi
 
-  # The image is built from the same commit as the npm package, not downloaded from npm, so it
-  # does not wait for the staged version to be approved. The first push creates the package on
-  # ghcr.io as private: make it public once under the organization's Packages settings.
-  docker:
-    needs: [check, publish]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          ref: ${{ needs.check.outputs.sha }}
-          persist-credentials: false
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
-        with:
-          node-version: "22"
-      - run: npm pack
-      - name: Build and push the image
-        env:
-          GH_TOKEN: ${{ github.token }}
-          VERSION: ${{ needs.check.outputs.version }}
-        run: |
-          IMAGE="ghcr.io/${GITHUB_REPOSITORY,,}"
-          MAJOR="${VERSION%%.*}"
-          MINOR="${VERSION%.*}"
-          docker build -t "$IMAGE:$VERSION" -t "$IMAGE:$MINOR" -t "$IMAGE:$MAJOR" -t "$IMAGE:latest" .
-          docker run --rm "$IMAGE:$VERSION" --version
-          echo "$GH_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
-          for tag in "$VERSION" "$MINOR" "$MAJOR" latest; do docker push "$IMAGE:$tag"; done
