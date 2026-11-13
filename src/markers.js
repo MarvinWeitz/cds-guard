@@ -1,7 +1,7 @@
 'use strict'
 const fs = require('node:fs')
 const path = require('node:path')
-const { hashText } = require('./hash')
+const { hashText, normaliseText } = require('./hash')
 const { listFiles, toPosix } = require('./files')
 
 // Works with any comment style: // # -- /* */ <!-- -->
@@ -55,12 +55,12 @@ function collectMarkers (rule, root, config) {
   for (const id of rule.markers) {
     let found = 0
     for (const { file, blocks, errors } of scanned) {
-      for (const err of errors.filter(x => x.id === id)) items[`marker:${id}@${file}:${err.line}`] = { missing: err.message }
+      for (const err of errors.filter(x => x.id === id)) items[`marker:${id}@${file}:${err.line}`] = { missing: err.message, file, line: err.line }
       const mine = blocks.filter(b => b.id === id)
       mine.forEach((b, n) => {
         found++
         const key = mine.length > 1 ? `marker:${id}@${file}#${n + 1}` : `marker:${id}@${file}`
-        items[key] = { hash: hashText(b.body), line: b.line }
+        items[key] = { hash: hashText(b.body), value: normaliseText(b.body), file, line: b.line }
       })
     }
     if (!found && !Object.keys(items).some(k => k.startsWith(`marker:${id}@`))) items[`marker:${id}`] = { missing: 'no @protected-begin block with this id found' }

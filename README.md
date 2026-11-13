@@ -61,9 +61,9 @@ another file is caught and a reformat is not. Markers work in any language that 
 | --- | --- | --- | --- |
 | GitHub | [`action.yml`](action.yml) | CODEOWNERS + "Require review from Code Owners" | `.github/CODEOWNERS` block |
 | Azure DevOps | [`ci/azure-pipelines/cds-guard.yml`](ci/azure-pipelines/cds-guard.yml) | Branch policy "Automatically included reviewers", required, with path filter | `az repos policy required-reviewer` script |
-| Bitbucket | [`ci/bitbucket/bitbucket-pipelines.yml`](ci/bitbucket/bitbucket-pipelines.yml) | CODEOWNERS (enforced with a merge check; check your plan) | `CODEOWNERS` block |
+| Bitbucket | [`ci/bitbucket/bitbucket-pipelines.yml`](ci/bitbucket/bitbucket-pipelines.yml) | CODEOWNERS (enforced with a merge check; check your plan) | `.bitbucket/CODEOWNERS` block |
 | GitLab | [`ci/gitlab/cds-guard.gitlab-ci.yml`](ci/gitlab/cds-guard.gitlab-ci.yml) | CODEOWNERS + "Code owner approval" (Premium) | `CODEOWNERS` block with a `[cds-guard]` section |
-| Anything else (Jenkins, …) | [`Dockerfile`](Dockerfile) or `npx cds-guard check` | whatever path-based reviewers the platform has | – |
+| Anything else (Jenkins, …) | `npx @cbs-consulting/cds-guard check` | whatever path-based reviewers the platform has | – |
 
 ## 🚀 Quick start
 
@@ -152,13 +152,34 @@ module.exports = function tax (net) {
 | Command | What it does |
 | --- | --- |
 | `cds-guard init` | Creates `.guard/protected.yml` with examples. |
-| `cds-guard lock [--rule ID]...` | Writes the lock files of all rules, or of the given ones. Refuses items that can't be found. |
-| `cds-guard check [--format text\|json\|junit] [--junit FILE]` | Compares with the lock files. Exit code 1 when something changed. |
-| `cds-guard codeowners [--platform P] [--write [FILE]] [--branch B]` | Prints or writes the approver entries. Only the block between `# BEGIN cds-guard` and `# END cds-guard` is replaced, the rest of CODEOWNERS stays. |
+| `cds-guard lock [--rule ID]...` | Writes the lock files of all rules, or of the given ones, and lists the items that changed. Refuses items that can't be found. |
+| `cds-guard check [--format F] [--junit FILE] [--codequality FILE] [--base REF]` | Compares with the lock files. Exit code 1 when something changed, or when a generated CODEOWNERS block or Azure script no longer matches `protected.yml`. See [Check output](#check-output). |
+| `cds-guard codeowners [--platform P] [--write [FILE]] [--branch B] [--check]` | Prints or writes the approver entries. Only the block between `# BEGIN cds-guard` and `# END cds-guard` is replaced, the rest of CODEOWNERS stays. `--check` only reports whether the written blocks are up to date. |
 | `cds-guard list` | Shows every protected item per rule, and which ones can't be found. |
 
 All commands take `--root DIR`. Exit codes: `0` ok, `1` protected items changed, `2` usage or
 configuration error.
+
+### Check output
+
+| Option | What it adds |
+| --- | --- |
+| `--base REF` | For each changed item, a short diff of how it looked at the git ref `REF` (a branch, tag or commit). A shallow clone fetches the commit from `origin` first. If git can't find it, `check` warns and carries on. |
+| `--format github` | GitHub Actions annotations: each finding is marked on its file and line in the pull request. |
+| `--format azure` | The same for Azure Pipelines (logging commands). |
+| `--format json`, `--format junit` | The whole result as JSON or as a JUnit report on standard output. |
+| `--junit FILE`, `--codequality FILE` | Also write a JUnit report, or a GitLab Code Quality report for the merge request widget, to `FILE`. |
+
+The GitHub Action and the CI templates in [`ci/`](ci) already pass the target branch as `--base`
+and use the matching format.
+
+```text
+✗ rule "tax-formula"
+    changed       marker:tax-calc@srv/tax.js  block starting at line 2 changed
+        -   const rate = 0.19
+        +   const rate = 0.2
+            return Math.round(net * rate * 100) / 100
+```
 
 ## 🏗️ Set up your platform
 
@@ -187,8 +208,11 @@ jobs:
 
 In a branch ruleset (or branch protection) for main: "Require a pull request before merging",
 "Require review from Code Owners", and "Require status checks to pass" with `cds-guard`. Then
-`npx cds-guard codeowners --write`. List the workflow file in `guardPaths` so nobody can switch
-the check off unnoticed.
+`npx @cbs-consulting/cds-guard codeowners --write`. List the workflow file in `guardPaths` so
+nobody can switch the check off unnoticed.
+
+The action marks each finding on its line in the pull request and shows how changed items looked
+on the base branch. Set `diff: false` to leave the diffs out.
 </details>
 
 <details>
@@ -203,8 +227,13 @@ npx cds-guard codeowners --platform azure --write   # writes .guard/azure-polici
 REPO_ID=$(az repos show --repository my-repo --query id -o tsv) sh .guard/azure-policies.sh
 ```
 
-Run the script again after approvers change. It adds policies; remove outdated ones in the
-branch policy screen.
+Run both commands again after approvers change. The script creates the new policies and then
+removes the ones an earlier run created. `check` fails while `.guard/azure-policies.sh` doesn't
+match `protected.yml`.
+
+The pipeline fetches the target branch to show what changed. If your checkout step doesn't keep
+its credentials, add `persistCredentials: true` or `fetchDepth: 0` to it; without either, `check`
+still works and only leaves out the diffs.
 </details>
 
 <details>
@@ -213,7 +242,8 @@ branch policy screen.
 Merge [`ci/bitbucket/bitbucket-pipelines.yml`](ci/bitbucket/bitbucket-pipelines.yml) into your
 pipeline. In the branch restrictions of main: prevent changes without a pull request, and add the
 merge checks for successful builds and code owner approval (enforcing merge checks needs Bitbucket
-Cloud Premium, or Data Center). Then `npx cds-guard codeowners --platform bitbucket --write`.
+Cloud Premium, or Data Center). Then `npx @cbs-consulting/cds-guard codeowners --platform bitbucket --write`,
+which writes `.bitbucket/CODEOWNERS`.
 </details>
 
 <details>
@@ -227,10 +257,11 @@ approval" (Premium), then `npx cds-guard codeowners --platform gitlab --write`.
 <details>
 <summary><b>Other CI systems</b></summary>
 
-Run `npx cds-guard check` after `npm ci`, or the Docker image without installing anything:
+Run `npx @cbs-consulting/cds-guard check` after `npm ci`, so the project's own `@sap/cds`
+compiles the model. On an agent without Node.js, run both in a `node:22` container:
 
 ```bash
-docker run --rm -v "$PWD:/repo" -w /repo ghcr.io/cbs-consulting/cds-guard check
+docker run --rm -v "$PWD:/repo" -w /repo node:22 sh -c "npm ci && npx --yes @cbs-consulting/cds-guard check"
 ```
 </details>
 
@@ -246,6 +277,10 @@ docker run --rm -v "$PWD:/repo" -w /repo ghcr.io/cbs-consulting/cds-guard check
 - **It is a merge gate, not access control.** Anyone can edit protected code locally. What stops
   the merge is the required check plus the required reviewers on the lock files. People who may
   bypass branch rules can still merge.
+- **Approver files stay in sync.** `check` compares the generated CODEOWNERS block (in any place
+  a platform reads it from) and `.guard/azure-policies.sh` with `protected.yml`, and fails when
+  they differ. The block also makes the guard owners the owners of the CODEOWNERS file itself, so
+  removing it needs their approval.
 - **Renames look like deletions.** A renamed entity is reported as `missing`; update the rule and
   lock again.
 

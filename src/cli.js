@@ -3,7 +3,7 @@ const fs = require('node:fs')
 const path = require('node:path')
 const { loadConfig, ConfigError } = require('./config')
 const { lock, TOOL_VERSION } = require('./lock')
-const { check, formatText, formatJunit } = require('./check')
+const { check, formatText, formatJunit, formatGithub, formatAzure, formatCodeQuality } = require('./check')
 const codeowners = require('./codeowners')
 const { init } = require('./init')
 const { collectRule, newRun } = require('./collect')
@@ -17,13 +17,17 @@ Usage: cds-guard <command> [options]
 Commands:
   init                     Create .guard/protected.yml
   lock [--rule ID]...      Write the lock files for all rules, or the given ones
-  check [--format F] [--junit FILE]
+  check [--format F] [--junit FILE] [--codequality FILE] [--base REF]
                            Compare against the lock files; exit code 1 on changes
-                           F: text (default), json, junit. --junit also writes a
-                           JUnit report to FILE for the pipeline's test view
-  codeowners [--platform P] [--write [FILE]] [--branch B]
+                           F: text (default), json, junit, github, azure.
+                           github and azure mark each finding on its file and line.
+                           --junit and --codequality also write a JUnit or GitLab
+                           Code Quality report to FILE. --base shows how each
+                           changed item looked at the git ref REF
+  codeowners [--platform P] [--write [FILE]] [--branch B] [--check]
                            Print (or write) the approver block for P:
-                           github (default), gitlab, bitbucket, azure
+                           github (default), gitlab, bitbucket, azure.
+                           --check fails when a written block is out of date
   list                     Show every protected item and its rule
 
 Options:
@@ -44,6 +48,9 @@ function parseArgs (argv) {
     else if (a === '--rule') opts.rule.push(next())
     else if (a === '--format') opts.format = next()
     else if (a === '--junit') opts.junit = next()
+    else if (a === '--codequality') opts.codequality = next()
+    else if (a === '--base') opts.base = next()
+    else if (a === '--check') opts.check = true
     else if (a === '--platform') opts.platform = next()
     else if (a === '--branch') opts.branch = next()
     else if (a === '--force') opts.force = true
@@ -73,7 +80,15 @@ async function main (argv, io = { out: s => process.stdout.write(s + '\n'), err:
       case 'lock': {
         const config = loadConfig(root)
         const { written, problems } = await lock(root, config, { rules: opts.rule })
-        for (const w of written) io.out(`locked ${w.rule}: ${w.items} item(s) -> ${w.file.split(path.sep).join('/')}`)
+        for (const w of written) {
+          if (w.unchanged) { io.out(`unchanged ${w.rule}: ${w.items} item(s) in ${w.file}`); continue }
+          io.out(`locked ${w.rule}: ${w.items} item(s) -> ${w.file}`)
+          if (w.created) continue
+          if (w.scopeChanged) io.out('    scope-changed (rule definition)')
+          for (const k of w.changed) io.out(`    changed       ${k}`)
+          for (const k of w.added) io.out(`    added         ${k}`)
+          for (const k of w.removed) io.out(`    removed       ${k}`)
+        }
         for (const p of problems) {
           io.err(`cannot lock rule "${p.rule}":`)
           for (const m of p.missing) io.err(`    ${m}`)
@@ -82,36 +97,49 @@ async function main (argv, io = { out: s => process.stdout.write(s + '\n'), err:
       }
       case 'check': {
         const config = loadConfig(root)
-        const result = await check(root, config)
         const format = opts.format || 'text'
+        if (!['text', 'json', 'junit', 'github', 'azure'].includes(format)) throw new ConfigError(`unknown format "${format}"`)
+        const result = await check(root, config, { base: opts.base })
         if (format === 'json') io.out(JSON.stringify(result, null, 2))
         else if (format === 'junit') io.out(formatJunit(result))
-        else if (format === 'text') (result.ok ? io.out : io.err)(formatText(result))
-        else throw new ConfigError(`unknown format "${format}"`)
-        if (opts.junit) {
-          const file = path.resolve(process.cwd(), opts.junit)
-          fs.mkdirSync(path.dirname(file), { recursive: true })
-          fs.writeFileSync(file, formatJunit(result))
+        else {
+          const marks = format === 'github' ? formatGithub(result, root) : format === 'azure' ? formatAzure(result, root) : ''
+          if (marks) io.out(marks)
+          ;(result.ok ? io.out : io.err)(formatText(result))
         }
+        const report = (name, content) => {
+          const file = path.resolve(process.cwd(), name)
+          fs.mkdirSync(path.dirname(file), { recursive: true })
+          fs.writeFileSync(file, content)
+        }
+        if (opts.junit) report(opts.junit, formatJunit(result))
+        if (opts.codequality) report(opts.codequality, formatCodeQuality(result, root))
         return result.ok ? 0 : 1
       }
       case 'codeowners': {
         const config = loadConfig(root)
+        if (opts.check) {
+          const found = codeowners.verify(root, config)
+          if (!found.length) { io.err('cds-guard: no generated approver block found. Run "cds-guard codeowners --write" first.'); return 1 }
+          for (const f of found) (f.ok ? io.out : io.err)(f.ok ? `up to date: ${f.file}` : `out of date: ${f.file}. Run "${f.hint}".`)
+          return found.every(f => f.ok) ? 0 : 1
+        }
         const platform = opts.platform || 'github'
         if (!codeowners.PLATFORMS.includes(platform)) throw new ConfigError(`unknown platform "${platform}" (${codeowners.PLATFORMS.join(', ')})`)
         if (platform === 'azure') {
           const script = codeowners.azureScript(config, { branch: opts.branch })
           if (opts.write) {
-            const file = path.resolve(root, opts.write === true ? '.guard/azure-policies.sh' : opts.write)
+            const file = path.resolve(root, opts.write === true ? codeowners.DEFAULT_FILE.azure : opts.write)
             fs.mkdirSync(path.dirname(file), { recursive: true })
             fs.writeFileSync(file, script, { mode: 0o755 })
             io.out(`wrote ${toPosix(path.relative(root, file))}`)
           } else io.out(script.trimEnd())
           return 0
         }
-        const content = codeowners.block(config, platform)
+        const target = opts.write && opts.write !== true ? toPosix(path.relative(root, path.resolve(root, opts.write))) : codeowners.DEFAULT_FILE[platform]
+        const content = codeowners.block(config, platform, { file: target })
         if (opts.write) {
-          const file = path.resolve(root, opts.write === true ? codeowners.DEFAULT_FILE[platform] : opts.write)
+          const file = path.resolve(root, target)
           codeowners.writeBlock(file, content)
           io.out(`updated ${toPosix(path.relative(root, file))}`)
         } else io.out(content.trimEnd())

@@ -28,7 +28,23 @@ async function cdsVersionFor (rule, config) {
   return (await loadModel(config.cdsRoot, config.cdsModel)).version
 }
 
-/** Write lock files. Refuses to lock a rule whose items cannot be resolved. */
+/** What differs between an old lock file and new item hashes. */
+function compare (old, items, scope) {
+  const before = (old && !old.corrupt && old.items) || {}
+  const keys = Object.keys(items)
+  return {
+    created: !old || !!old.corrupt,
+    scopeChanged: !!old && !old.corrupt && old.scope !== scope,
+    changed: keys.filter(k => k in before && before[k] !== items[k]),
+    added: keys.filter(k => !(k in before)),
+    removed: Object.keys(before).filter(k => !(k in items))
+  }
+}
+
+/**
+ * Write lock files. Refuses to lock a rule whose items cannot be resolved. A lock file whose
+ * content would stay the same is left as it is. Each written entry says what changed.
+ */
 async function lock (root, config, { rules: only = [] } = {}) {
   newRun()
   const unknown = only.filter(id => !config.rules.some(r => r.id === id))
@@ -40,17 +56,23 @@ async function lock (root, config, { rules: only = [] } = {}) {
     const items = await collectRule(rule, root, config)
     const missing = Object.entries(items).filter(([, v]) => v.missing)
     if (missing.length) { problems.push({ rule: rule.id, missing: missing.map(([k, v]) => `${k}: ${v.missing}`) }); continue }
+    const hashes = Object.fromEntries(Object.keys(items).sort().map(k => [k, items[k].hash]))
     const data = {
       rule: rule.id,
       scope: ruleScopeHash(rule),
       tool: TOOL_VERSION,
       cds: await cdsVersionFor(rule, config),
-      items: Object.fromEntries(Object.keys(items).sort().map(k => [k, items[k].hash]))
+      items: hashes
     }
+    const old = readLock(root, rule.id)
+    const changes = compare(old, hashes, data.scope)
+    const same = old && !old.corrupt && JSON.stringify({ ...old, tool: TOOL_VERSION }) === JSON.stringify(JSON.parse(JSON.stringify(data)))
     const file = lockPath(root, rule.id)
-    fs.mkdirSync(path.dirname(file), { recursive: true })
-    fs.writeFileSync(file, JSON.stringify(data, null, 2) + '\n')
-    written.push({ rule: rule.id, file: toPosix(path.relative(root, file)), items: Object.keys(items).length })
+    if (!same) {
+      fs.mkdirSync(path.dirname(file), { recursive: true })
+      fs.writeFileSync(file, JSON.stringify(data, null, 2) + '\n')
+    }
+    written.push({ rule: rule.id, file: toPosix(path.relative(root, file)), items: Object.keys(items).length, unchanged: !!same, ...changes })
   }
   return { written, problems }
 }

@@ -1,6 +1,7 @@
 'use strict'
 const { test } = require('node:test')
 const assert = require('node:assert/strict')
+const { execFileSync } = require('node:child_process')
 const { project } = require('./helpers')
 const { loadConfig } = require('../src/config')
 const { lock } = require('../src/lock')
@@ -151,4 +152,54 @@ test('cds.model limits which CDS files are loaded', async t => {
   p.edit('.guard/protected.yml', 'version: 1\n', 'version: 1\ncds:\n  model: [ db ]\n')
   const r = await lock(p.dir, loadConfig(p.dir), { rules: ['pricing-model'] })
   assert.match(r.problems[0].missing.join(), /@UI.LineItem not present/)
+})
+
+test('problems point at the file and line of the changed item', async t => {
+  const p = await lockedProject(t)
+  p.edit('db/schema.cds', 'netAmount : Decimal(9, 2)', 'netAmount : Decimal(11, 2)')
+  p.edit('srv/tax.js', '0.19', '0.2')
+  const result = await check(p.dir, loadConfig(p.dir))
+  const at = result.violations.flatMap(v => v.problems.map(x => `${x.item} ${x.file}:${x.line}`))
+  assert.deepEqual(at, ['cds:my.app.Orders.netAmount db/schema.cds:10', 'marker:tax-calc@srv/tax.js srv/tax.js:2'])
+})
+
+function git (dir, ...args) {
+  execFileSync('git', ['-c', 'user.name=test', '-c', 'user.email=test@example.com', ...args], { cwd: dir, stdio: 'pipe' })
+}
+
+test('with a base ref, changed items show what changed', async t => {
+  const p = await lockedProject(t)
+  git(p.dir, 'init', '--quiet')
+  git(p.dir, 'add', '-A')
+  git(p.dir, 'commit', '--quiet', '-m', 'base')
+  p.edit('db/schema.cds', 'netAmount : Decimal(9, 2)', 'netAmount : Decimal(11, 2)')
+  p.edit('srv/tax.js', '0.19', '0.2')
+  const result = await check(p.dir, loadConfig(p.dir), { base: 'HEAD' })
+  const diffs = Object.fromEntries(result.violations.flatMap(v => v.problems.map(x => [x.item, x.diff])))
+  assert.ok(diffs['cds:my.app.Orders.netAmount'].includes('-   "precision": 9,'))
+  assert.ok(diffs['cds:my.app.Orders.netAmount'].includes('+   "precision": 11,'))
+  assert.deepEqual(diffs['marker:tax-calc@srv/tax.js'].filter(l => /^[-+]/.test(l)), ['-   const rate = 0.19', '+   const rate = 0.2'])
+  assert.deepEqual(result.warnings, [])
+  assert.equal(execFileSync('git', ['worktree', 'list'], { cwd: p.dir, encoding: 'utf8' }).trim().split('\n').length, 1, 'temporary worktree is removed')
+})
+
+test('an unknown base ref only adds a warning', async t => {
+  const p = await lockedProject(t)
+  git(p.dir, 'init', '--quiet')
+  p.edit('srv/tax.js', '0.19', '0.2')
+  const result = await check(p.dir, loadConfig(p.dir), { base: 'no-such-ref' })
+  assert.equal(result.ok, false)
+  assert.match(result.warnings.join('\n'), /cannot show what changed: cannot find base "no-such-ref"/)
+})
+
+test('an outdated CODEOWNERS block fails the check', async t => {
+  const p = await lockedProject(t)
+  const { block } = require('../src/codeowners')
+  const config = loadConfig(p.dir)
+  p.write('.github/CODEOWNERS', '* @org/everyone\n\n' + block(config, 'github'))
+  assert.equal((await check(p.dir, config)).ok, true)
+  p.edit('.guard/protected.yml', 'approvers: [ bob@example.com ]', 'approvers: [ carol@example.com ]')
+  const result = await check(p.dir, loadConfig(p.dir))
+  assert.equal(result.ok, false)
+  assert.deepEqual(result.owners, [{ file: '.github/CODEOWNERS', hint: 'npx @cbs-consulting/cds-guard codeowners --write .github/CODEOWNERS' }])
 })
