@@ -12,7 +12,7 @@ function ruleScopeHash (rule) {
 
 async function collectRule (rule, root, config) {
   return {
-    ...(await collectCds(rule, config)),
+    ...(await collectCds(rule, config, root)),
     ...collectMarkers(rule, root, config),
     ...collectPaths(rule, root, config),
     ...collectJson(rule, root)

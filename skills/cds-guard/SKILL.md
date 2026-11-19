@@ -39,7 +39,8 @@ Look for `.guard/protected.yml` at the repository root.
    item it marks with `!!` (not found). Names are case-sensitive and fully qualified.
 5. Lock: `npx @cbs-consulting/cds-guard lock`.
 6. Generate the approvers: `npx @cbs-consulting/cds-guard codeowners --write` for GitHub, add
-   `--platform gitlab` or `--platform bitbucket` for those. For Azure DevOps,
+   `--platform gitlab` or `--platform bitbucket` for those (Bitbucket's goes to
+   `.bitbucket/CODEOWNERS`). For Azure DevOps,
    `--platform azure --write` writes `.guard/azure-policies.sh`; the user runs it with `REPO_ID` set.
    Don't run it yourself.
 7. Add the pipeline step from the cds-guard README for the platform, and list that pipeline file
@@ -57,13 +58,15 @@ read `.guard/protected.yml`, or run `npx @cbs-consulting/cds-guard list`.
 
 - **Protected, and the user asked for exactly this change:** make it, then lock only the rules
   it touches with `npx @cbs-consulting/cds-guard lock --rule <id>`. Tell the user which rule
-  changed and who must approve it (its `approvers`, or `guardOwners` when it has none).
+  changed and who must approve it (its `approvers`, or `guardOwners` when it has none). `lock`
+  lists the items that changed in each lock file; check that the list matches what you meant.
 - **Protected, and the change is a side effect** (a refactor, a rename, a formatter, an upgrade):
   don't lock. Find a way that leaves the protected item as it is, or stop and ask the user.
 - **Not protected:** go ahead.
 
 After any such change, run `npx @cbs-consulting/cds-guard check` before you report the work as
-done. Use `--format json` if you want to read the result.
+done. Use `--format json` if you want to read the result, and `--base <branch>` to see a diff of
+how each changed item looked on that branch.
 
 ## When check fails
 
@@ -78,6 +81,10 @@ done. Use `--format json` if you want to read the result.
 | `scope-changed` | What the rule protects changed in `protected.yml`. | `lock --rule <id>`. |
 | `unlocked` | The rule has no lock file yet. | `lock --rule <id>`. |
 | `corrupt` | The lock file can't be read. | `lock --rule <id>`; never repair it by hand. |
+
+`check` also fails when a generated CODEOWNERS block or `.guard/azure-policies.sh` no longer
+matches `protected.yml`. Run the `codeowners` command it prints and commit the result; this
+needs no new lock.
 
 A warning about a different `@sap/cds` version means the upgrade may have changed the compiled
 model. Lock again only if the user agrees the upgrade is the only cause.

@@ -55,10 +55,10 @@ npx cds-guard codeowners --platform gitlab --write   # updates the [cds-guard] s
 ## Bitbucket Cloud
 
 ```bash
-npx cds-guard codeowners --platform bitbucket --write .bitbucket/CODEOWNERS
+npx @cbs-consulting/cds-guard codeowners --platform bitbucket --write   # writes .bitbucket/CODEOWNERS
 ```
 
-- Bitbucket Cloud reads `.bitbucket/CODEOWNERS`, so pass that path to `--write`. Put
+- Bitbucket Cloud reads `.bitbucket/CODEOWNERS`, which is where `--write` puts the block. Put
   `teams.yaml` next to it.
 - Users are `@user` or an e-mail address. Groups are `@workspace/group`. Without a strategy,
   Bitbucket adds one random member of the group as reviewer.
@@ -80,5 +80,5 @@ REPO_ID=$(az repos show --repository my-repo --query id -o tsv) sh .guard/azure-
 - Approvers are e-mail addresses or group names as Azure DevOps shows them, such as
   `[Bookshop]\Backend Team`. Write group names in single quotes in YAML, so the backslash stays.
 - For a group, the approval of one member counts.
-- Run the script again after approvers change. It adds policies; remove outdated ones in the
-  branch policy screen.
+- Run the script again after approvers change. It creates the new policies first and then removes
+  the ones an earlier run created, recognised by their message starting with `cds-guard:`.

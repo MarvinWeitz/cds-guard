@@ -17,6 +17,9 @@ inputs:
   junit:
     description: Also write a JUnit report to this file.
     default: ""
+  diff:
+    description: In pull requests and merge queues, show how each changed item looked on the base branch. Fetches the base commit when the checkout is shallow.
+    default: "true"
 runs:
   using: composite
   steps:
@@ -32,9 +35,13 @@ runs:
         GUARD_ROOT: ${{ inputs.root }}
         GUARD_VERSION: ${{ inputs.version }}
         GUARD_JUNIT: ${{ inputs.junit }}
+        GUARD_DIFF: ${{ inputs.diff }}
+        GUARD_BASE: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
       run: |
-        args=(check --root "$GUARD_ROOT")
+        # --format github marks each finding on its file and line in the pull request.
+        args=(check --root "$GUARD_ROOT" --format github)
         if [ -n "$GUARD_JUNIT" ]; then args+=(--junit "$GUARD_JUNIT"); fi
+        if [ "$GUARD_DIFF" = "true" ] && [ -n "$GUARD_BASE" ]; then args+=(--base "$GUARD_BASE"); fi
         if [ "$GUARD_VERSION" = "local" ]; then
           node "$GITHUB_ACTION_PATH/bin/cds-guard.js" "${args[@]}"
         else

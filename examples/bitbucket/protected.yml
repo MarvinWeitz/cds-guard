@@ -7,8 +7,8 @@
 #   "@acme-ws/pricing:random(2)"   two random members of the group
 #   "@acme-ws/ux:all"              every member of the group (least_busy(N) works too)
 #   "@teams/finance"               a team defined in .bitbucket/teams.yaml (see teams.yaml)
-# Bitbucket reads .bitbucket/CODEOWNERS, so write the block there:
-#   npx cds-guard codeowners --platform bitbucket --write .bitbucket/CODEOWNERS
+# Bitbucket reads .bitbucket/CODEOWNERS, which is where the block is written:
+#   npx @cbs-consulting/cds-guard codeowners --platform bitbucket --write
 version: 1
 
 cds:

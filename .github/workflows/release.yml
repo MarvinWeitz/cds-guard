@@ -1,6 +1,6 @@
 name: Release
-# Stages a tested commit on npm and creates a GitHub release with the version's CHANGELOG.md
-# entry. Started by hand from the Actions tab; nothing runs until a maintainer approves the "npm"
+# Stages a tested commit on npm, creates a GitHub release with the version's CHANGELOG.md
+# entry, and moves the major tag (v0, v1, ...) that `uses: cbs-consulting/cds-guard@v0` points at. Started by hand from the Actions tab; nothing runs until a maintainer approves the "npm"
 # environment.
 #
 # npm accepts the upload because this workflow is the package's trusted publisher (npmjs.com ->
@@ -80,3 +80,16 @@ jobs:
         run: |
           awk -v v="$VERSION" '$0 ~ "^## "v" " {on=1; next} /^## / {on=0} on' CHANGELOG.md > notes.md
           gh release create "v$VERSION" --target "$SHA" --title "cds-guard $VERSION" --notes-file notes.md
+      - name: Move the major tag to this release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.check.outputs.version }}
+          SHA: ${{ needs.check.outputs.sha }}
+        run: |
+          TAG="v${VERSION%%.*}"
+          if gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$TAG" >/dev/null 2>&1; then
+            gh api -X PATCH "repos/$GITHUB_REPOSITORY/git/refs/tags/$TAG" -f sha="$SHA" -F force=true
+          else
+            gh api -X POST "repos/$GITHUB_REPOSITORY/git/refs" -f ref="refs/tags/$TAG" -f sha="$SHA"
+          fi
+
