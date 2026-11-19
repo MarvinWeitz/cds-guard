@@ -6,6 +6,7 @@ const { lock, TOOL_VERSION } = require('./lock')
 const { check, formatText, formatJunit } = require('./check')
 const codeowners = require('./codeowners')
 const { init } = require('./init')
+const skill = require('./skill')
 const { collectRule, newRun } = require('./collect')
 const { toPosix } = require('./files')
 
@@ -25,6 +26,9 @@ Commands:
                            Print (or write) the approver block for P:
                            github (default), gitlab, bitbucket, azure
   list                     Show every protected item and its rule
+  skill [--write [DIR]]    Print (or write) the agent skill for AI coding agents;
+                           --write puts it in DIR/cds-guard/SKILL.md
+                           (default DIR: .claude/skills)
 
 Options:
   --root DIR               Repository root (default: current directory)
@@ -66,7 +70,7 @@ async function main (argv, io = { out: s => process.stdout.write(s + '\n'), err:
       case 'init': {
         const r = init(root, { force: opts.force })
         io.out(r.created
-          ? `Created ${toPosix(path.relative(root, r.file))}. Add rules, then run "cds-guard lock" and "cds-guard codeowners --write".`
+          ? `Created ${toPosix(path.relative(root, r.file))}. Add rules, then run "cds-guard lock" and "cds-guard codeowners --write".\nFor AI coding agents: "cds-guard skill --write" adds a skill that tells them how to work with the guard.`
           : `${toPosix(path.relative(root, r.file))} already exists (use --force to overwrite).`)
         return 0
       }
@@ -125,6 +129,12 @@ async function main (argv, io = { out: s => process.stdout.write(s + '\n'), err:
           const items = await collectRule(rule, root, config)
           for (const [k, v] of Object.entries(items)) io.out(`    ${k}${v.missing ? `  !! ${v.missing}` : ''}`)
         }
+        return 0
+      }
+      case 'skill': {
+        if (!opts.write) { io.out(skill.content().trimEnd()); return 0 }
+        const r = skill.writeSkill(root, opts.write === true ? undefined : opts.write)
+        io.out(`${r.status} ${toPosix(path.relative(root, r.file))}`)
         return 0
       }
       default:

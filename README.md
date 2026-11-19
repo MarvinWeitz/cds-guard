@@ -73,6 +73,7 @@ npx cds-guard init                               # creates .guard/protected.yml
 # add rules to .guard/protected.yml
 npx cds-guard lock                               # writes .guard/locks/*.lock
 npx cds-guard codeowners --write                 # or --platform azure|gitlab|bitbucket
+npx cds-guard skill --write                      # optional: teaches AI coding agents the guard
 git add .guard .github/CODEOWNERS && git commit -m "Protect the pricing model"
 ```
 
@@ -156,6 +157,7 @@ module.exports = function tax (net) {
 | `cds-guard check [--format text\|json\|junit] [--junit FILE]` | Compares with the lock files. Exit code 1 when something changed. |
 | `cds-guard codeowners [--platform P] [--write [FILE]] [--branch B]` | Prints or writes the approver entries. Only the block between `# BEGIN cds-guard` and `# END cds-guard` is replaced, the rest of CODEOWNERS stays. |
 | `cds-guard list` | Shows every protected item per rule, and which ones can't be found. |
+| `cds-guard skill [--write [DIR]]` | Prints or writes the [agent skill](#-ai-coding-agents) to `DIR/cds-guard/SKILL.md` (default `.claude/skills`). |
 
 All commands take `--root DIR`. Exit codes: `0` ok, `1` protected items changed, `2` usage or
 configuration error.
@@ -233,6 +235,41 @@ Run `npx cds-guard check` after `npm ci`, or the Docker image without installing
 docker run --rm -v "$PWD:/repo" -w /repo ghcr.io/cbs-consulting/cds-guard check
 ```
 </details>
+
+## 🤖 AI coding agents
+
+The package ships an [agent skill](skills/cds-guard/SKILL.md) that teaches coding agents to work
+with the guard: set it up when asked, check whether a file is protected before editing it, run
+`check` afterwards, and lock only changes the user asked for, never to silence a failing check.
+
+```bash
+npx @cbs-consulting/cds-guard skill --write                 # .claude/skills/cds-guard/SKILL.md
+npx @cbs-consulting/cds-guard skill --write .agents/skills  # another agent's skills folder
+```
+
+The repository is also a plugin in the
+[cbs Agentic Marketplace](https://github.com/cbs-consulting/agentic-marketplace), so you can
+install the skill once for all your projects:
+
+```text
+/plugin marketplace add cbs-consulting/agentic-marketplace     # Claude Code
+/plugin install cds-guard@cbs-consulting
+```
+
+```bash
+copilot plugin marketplace add cbs-consulting/agentic-marketplace  # GitHub Copilot CLI
+copilot plugin install cds-guard@cbs-consulting
+codex plugin marketplace add cbs-consulting/agentic-marketplace    # Codex, then /plugins
+```
+
+The plugin follows the default branch of this repository. `skill --write` gives you the copy that
+matches your installed version instead.
+
+Claude Code picks it up from `.claude/skills/`. Other agents that read the
+[Agent Skills](https://agentskills.io) format take the folder they look in. Commit the file so the
+whole team gets it. The skill belongs to the installed version: run the command again after an
+upgrade, which replaces the file. To use the skill without installing the package, copy
+[`skills/cds-guard/SKILL.md`](skills/cds-guard/SKILL.md).
 
 ## ❓ How it works and its limits
 

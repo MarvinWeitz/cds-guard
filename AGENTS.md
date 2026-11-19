@@ -23,6 +23,8 @@ generates. The tool never calls a Git platform API.
 | `src/hash.js` | Canonical JSON and text normalisation. Changing it changes every user's hashes. |
 | `src/lock.js`, `src/check.js` | Lock file writing and comparison, text and JUnit output. |
 | `src/codeowners.js` | CODEOWNERS blocks and the Azure DevOps policy script. |
+| `skills/cds-guard/SKILL.md`, `src/skill.js` | Agent skill for users' coding agents, and the `skill` command that writes it. Update the skill when commands or config keys change. |
+| `plugin.json`, `.claude-plugin/plugin.json` | Agent plugin manifests, so the cbs Agentic Marketplace can list the skill. Their `version` follows `package.json`. |
 | `action.yml`, `ci/`, `Dockerfile` | CI templates for GitHub, Azure Pipelines, Bitbucket, GitLab and other systems. |
 | `test/` | `node:test` suite; `test/fixtures/bookshop` is a small CAP project. |
 

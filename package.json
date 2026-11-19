@@ -11,7 +11,7 @@
   "author": "cbs Corporate Business Solutions Unternehmensberatung GmbH",
   "main": "index.js",
   "bin": { "cds-guard": "bin/cds-guard.js" },
-  "files": ["bin/", "src/", "index.js", "ci/", "LICENSE", "README.md", "CHANGELOG.md"],
+  "files": ["bin/", "src/", "index.js", "ci/", "skills/", "LICENSE", "README.md", "CHANGELOG.md"],
   "engines": { "node": ">=22" },
   "scripts": {
     "test": "node --test \"test/*.test.js\""

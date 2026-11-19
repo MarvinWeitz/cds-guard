@@ -1,0 +1,14 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "cds-guard",
+  "version": "0.1.1",
+  "description": "Sets up @cbs-consulting/cds-guard in CAP and UI5 projects and keeps coding agents from changing protected CDS entities, annotations, code blocks and files by accident.",
+  "author": {
+    "name": "cbs Corporate Business Solutions Unternehmensberatung GmbH",
+    "email": "cp_opensource@cbs-consulting.de"
+  },
+  "homepage": "https://github.com/cbs-consulting/cds-guard#readme",
+  "repository": "https://github.com/cbs-consulting/cds-guard",
+  "license": "Apache-2.0",
+  "keywords": ["sap", "cap", "cds", "ui5", "fiori", "codeowners", "guard"]
+}

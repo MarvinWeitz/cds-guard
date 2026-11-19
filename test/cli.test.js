@@ -79,3 +79,43 @@ test('JSON pointer escapes', () => {
   assert.deepEqual(getPointer({ 'a/b': { '~c': 1 } }, '/a~1b/~0c'), { found: true, value: 1 })
   assert.equal(getPointer({ a: 1 }, '/b').found, false)
 })
+
+test('skill prints the agent skill and writes it once', async t => {
+  const p = project(t)
+  const printed = await run(['skill'])
+  assert.equal(printed.code, 0)
+  assert.match(printed.out, /^---\nname: cds-guard\n/)
+  assert.match((await run(['skill', '--root', p.dir, '--write'])).out, /^created \.claude\/skills\/cds-guard\/SKILL\.md$/)
+  assert.equal(p.read('.claude/skills/cds-guard/SKILL.md').trimEnd(), printed.out)
+  assert.match((await run(['skill', '--root', p.dir, '--write'])).out, /^unchanged /)
+  p.write('.claude/skills/cds-guard/SKILL.md', 'old\n')
+  assert.match((await run(['skill', '--root', p.dir, '--write'])).out, /^updated /)
+  assert.match((await run(['skill', '--root', p.dir, '--write', '.agents/skills'])).out, /^created \.agents\/skills\/cds-guard\/SKILL\.md$/)
+})
+
+test('the agent skill has valid frontmatter and only names real commands', async () => {
+  const text = require('../src/skill').content()
+  const front = text.match(/^---\n([\s\S]*?)\n---\n/)
+  assert.ok(front, 'frontmatter')
+  const meta = require('yaml').parse(front[1])
+  assert.equal(meta.name, 'cds-guard')
+  assert.ok(meta.description.length <= 1024)
+  assert.doesNotMatch(meta.description, /[<>]/)
+  const help = (await run(['--help'])).out
+  const used = [...text.matchAll(/npx @cbs-consulting\/cds-guard (\w+)/g)].map(m => m[1])
+  assert.ok(used.length > 3)
+  for (const cmd of new Set(used)) assert.match(help, new RegExp(`^  ${cmd}\\b`, 'm'), `unknown command "${cmd}" in SKILL.md`)
+})
+
+test('both plugin manifests match the package and point at the skill', () => {
+  const pkg = require('../package.json')
+  const root = path.join(__dirname, '..')
+  for (const file of ['plugin.json', path.join('.claude-plugin', 'plugin.json')]) {
+    const manifest = JSON.parse(fs.readFileSync(path.join(root, file), 'utf8'))
+    assert.equal(manifest.name, 'cds-guard', file)
+    assert.equal(manifest.version, pkg.version, `${file}: raise "version" with package.json`)
+    assert.equal(manifest.license, pkg.license, file)
+  }
+  assert.match(JSON.parse(fs.readFileSync(path.join(root, 'plugin.json'), 'utf8')).$schema, /^https:\/\/agent-plugins\.org\/schemas\/1\.\d+\.\d+\/plugin\.schema\.json$/)
+  assert.ok(fs.existsSync(path.join(root, 'skills', 'cds-guard', 'SKILL.md')))
+})
